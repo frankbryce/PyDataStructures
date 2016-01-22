@@ -49,6 +49,27 @@ def test_TreeWithRightChildHasLen2():
   tree = BTree(right=BTree())
   assert len(tree)==2
   
+def test_addChildWorks():
+  tree = BTree()
+  ltree = BTree(left=BTree(), right=BTree(left=BTree()))
+  rtree = BTree(left=BTree(left=BTree()), right=BTree(left=BTree(),right=BTree()))
+  
+  tree_len = len(tree)
+  ltree_len = len(ltree)
+  rtree_len = len(rtree)
+  assert len(tree)==1
+  assert len(ltree)==4
+  assert len(rtree)==6
+  tree.add_left(ltree)
+  assert len(tree)==tree_len + ltree_len
+  tree.add_right(rtree)
+  assert len(tree)==tree_len + ltree_len + rtree_len
+  
+  
+def test_TreeWithRightChildHasLen2():
+  tree = BTree(right=BTree())
+  assert len(tree)==2
+  
 def test_CompoundTreeHasCorrectLength():
   tree = BTree(
     left=BTree(
@@ -68,3 +89,23 @@ def test_CompoundTreeHasCorrectLength():
     )
   )
   assert len(tree)==11
+  
+def test_CompoundTreeHasCorrectHeight():
+  tree = BTree(
+    left=BTree(
+      left=BTree(),
+      right=BTree(
+        left=BTree(),
+        right=BTree(
+          right=BTree()
+        )
+      )
+    ),
+    right=BTree(
+      left=BTree(),
+      right=BTree(
+        right=BTree()
+      )
+    )
+  )
+  assert tree.height==5
