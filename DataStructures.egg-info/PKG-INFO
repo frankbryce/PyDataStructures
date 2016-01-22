@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: DataStructures
+Version: 0.0.0
+Summary: A sample Python project
+Home-page: https://github.com/frankbryce/PyDataStructures.git
+Author: John Carpenter
+Author-email: jonnyjack7@gmail.com
+License: MIT
+Description: The goal of this project is to learn python, and
+        freshen up on data structures at the same time.
+Keywords: sample setuptools development
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.5
