@@ -57,14 +57,18 @@ class BTree:
     self.right.left = self
     self.right = self.right.left
 
-  def replace_with(self, child):
-    if parent is None:
+  def replace_with(self, node):
+    if self.parent is None:
       return # do nothing... garbage collection will collect
              # self once nothing references it anymore
     if self.parent.right == self:
-      self.parent.right = child
+      self.parent.right = node
     else:
-      self.parent.left = child
+      self.parent.left = node
+
+  def _replace_if_none(self):
+    if self.value is None:
+      self.replace_with(None)
 
   # list protocol
   def __len__(self):
@@ -103,22 +107,19 @@ class BTree:
       for ch in self.left.nodes_rtol():
         yield ch
 
-        
-from enum import Enum
+RED = False 
+BLACK = True
+
 # Red Black Binary Tree
-class RB_BTree(BTree):
-  class _color(Enum):
-    red = True
-    black = False
-    
+class RB_BTree(BTree):  
+  # helper methods to account for None nodes being black
   @staticmethod
   def _is_black(rb_btree):
     if rb_btree is None:
       return True #leaves are black
     if typeof(rb_btree)==RB_BTree:
-      return rb_btree.color == RB_Btree._color.black
+      return rb_btree.color == BLACK
     return False
-  
   def _is_red(rb_btree):
     if typeof(rb_btree)==RB_BTree:
       return RB_BTree._is_black(rb_btree)
@@ -126,35 +127,35 @@ class RB_BTree(BTree):
 
   def __init__(self, **kwargs):
     super().__init__(**kwargs)
-    self.color = self._color.black
+    self.color = BLACK
   
   # add sub-trees... but all added nodes must be red
   def add_left(self, child):
     super().add_left(child)
-    self.colod = self._color.red
+    self.color = RED
   
   def add_right(self, child):
     super().add_right(child)
-    self.colod = self._color.red
+    self.color = RED
     
   def insert(self, key, value):
     if self.value is None:
       self.value = (key, value)
-      self.color = self._color.red
+      self.color = RED
       self._insert_case1()
     elif self.value[0] == key:
       raise ValueError("key \"" + str(key) + "\" has already been inserted")
     elif key > self.value[0]:
       if self.right is None:
         self.add_right(value=(key, value))
-        self.right.color = self._color.red
+        self.right.color = RED
         self.right._insert_case1()
       else:
         self.right.insert(key,value)
     elif key < self.value[0]:
       if self.left is None:
         self.add_left(value=(key, value))
-        self.left.color = self._color.red
+        self.left.color = RED
         self.left._insert_case1()
       else:
         self.left.insert(key,value)
@@ -163,32 +164,28 @@ class RB_BTree(BTree):
     
   def _insert_case1(self):
     if self.parent is None:
-      self.color = self._color.black
-    self._insert_case2()
+      self.color = BLACK #finished
+    else:
+      self._insert_case2()
       
   def _insert_case2(self):
-    if self.parent.color == self._color.black:
+    if self.parent.color == BLACK:
       return # do nothing
     self._insert_case3()
   
+  #parent is red
   def _insert_case3(self):
-    if (self.uncle is None) or \
-      not ((self.parent.color == self._color.red) and \
-           (self.uncle.color  == self._color.red)):
+    if (self.uncle is None) or (self.uncle.color  == BLACK):
       self._insert_case4()
+      return #finished
       
     # uncle and parent are both red
-    self.parent.color = self._color.black
-    self.uncle.color = self._color.black
-    self.grandparent.color = self._color.red
+    self.parent.color = BLACK
+    self.uncle.color = BLACK
+    self.grandparent.color = RED
     self.grandparent._insert_case1()
   
   def _insert_case4(self):
-    if ((self.grandparent is None) and (self.uncle is None)) or \
-       not ((self.parent.color == self._color.red) and \
-            (self.uncle.color  == self._color.black)):
-      self._insert_case5()
-    
     # parent is red and uncle is black
     # put red child on the "outside" of the tree.. prepping
     # for step 5 where a rotation around the grandparent is performed
@@ -203,8 +200,8 @@ class RB_BTree(BTree):
       self._insert_case5()
     
   def _insert_case5(self):
-    self.parent.color = self._color.black
-    self.grandparent.color = self._color.red
+    self.parent.color = BLACK
+    self.grandparent.color = RED
     if self == self.parent.left:
       self.grandparent.rotate_right()
     else:
@@ -234,45 +231,75 @@ class RB_BTree(BTree):
     if (node.left is not None) and (node.right is not None):
       # node is internal node, so get smallest item from right
       # subtree and switch the two nodes.  Then, we delete the
-      # node where this node went to, since it now has at least
+      # node where this node went to, since it now has at most
       # one None child.
       smallestRight = next(node.right.ltor())
-      nodeValue = node.value
       node.value = smallestRight.value
-      smallestRight.value = nodeValue
-      node = smallestRight # set this so that we share node with
-                           # the code path that didn't enter this
-                           # if block
-    node._delete_one_child()
+      smallestRight._delete_one_child()
+    else:
+      node._delete_one_child()
     
   def _delete_one_child(self):
     child = (self.left, self.right)[self.left is None]
+    if child is None: # temporary node created to make code path the
+                      # same regardless of if this is a "Null" node or
+                      # a legit node
+      child = typeof(self)(value=None)
+    
     self.replace_with(child)
-    if self.color == self._color.black:
-      if child.color == self._color.red:
-        child.color = self._color.black
+    if self.color == BLACK:
+      if self._is_red(child):
+        child.color = BLACK
       else
         child._delete_case1()
+    child._replace_if_none()
   
+  # replaced node's color was black, and child (now self) is black
+  # this tree now has 1 fewer black nodes en route to leaves
   def _delete_case1(self):
+    # if this is the root of the tree, then we just eliminated one
+    # black leaf en route to ALL leaves, so we're done
     if self.parent is not None:
+      # otherwise, there's still more work to do
       self.delete_case2()
   
+  # sibling is red... let's rotate the tree so that my sibling is now
+  # black instead... but it could be null
   def _delete_case2(self):
-    if self._is_black(self.sibling):
-      self.parent.color = self._color.red
-      if self.sibling is not None:
-        self.sibling.color = self._color.black
+    if self._is_red(self.sibling):
+      self.parent.color = RED
+      self.sibling.color = BLACK
       if self == self.parent.left:
-        self.parent.left.rotate_left()
+        self.parent.rotate_left()
       else
-        self.parent.right.rotate_right()
+        self.parent.rotate_right()
     _delete_case3(self):
   
+  # sibling, parent, and self are black, but sibling may be None
   def _delete_case3(self):
-    if (self._is_black(self.parent)) and
-       (self.sibling.color == self._color.black) and
-       (self.sibling.left.color == self._color.black) and
-       (self.sibling.right.color)
-      
+    if (self.parent.color == BLACK) and
+       ((self.sibling is None) or (self._is_black(self.sibling.left))) and
+       ((self.sibling is None) or (self._is_black(self.sibling.right))):
+      if self.sibling is not None:
+        self.sibling.color = RED
+      self.parent._delete_case1()
+    else
+      self._delete_case4(self)
   
+  # sibling and self are black, parent is red
+  def _delete_case4(self):
+    if (self.parent.color == RED) and
+       ((self.sibling is None) or (self._is_black(self.sibling.left))) and
+       ((self.sibling is None) or (self._is_black(self.sibling.right))):
+      if self.sibling is not None:
+        self.sibling.color = RED
+      self.parent.color = BLACK
+    else
+      self._delete_case5(self)
+      
+  def _delete_case5(self):
+    if (self == self.parent.left) and
+       ((self.sibling is None) or (self._is_black(self.sibling.right))):
+      if self.sibling is not None:
+        self.sibling.color = RED
+        
