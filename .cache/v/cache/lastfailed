@@ -1,1 +1,6 @@
-{}
+{
+  "tests/test_RB_BTree.py::test_lworLessSimpleCase": true,
+  "tests/test_RB_BTree.py::test_lworSimpleCases": true,
+  "tests/test_RB_BTree.py::test_manyInsertsAndSomeDeletesReturnsRemainingValues": true,
+  "tests/test_RB_BTree.py::test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData": true
+}
