@@ -49,6 +49,11 @@ def test_TreeWithRightChildHasLen2():
   tree = BTree(right=BTree())
   assert len(tree)==2
   
+def test_TreeRotationWithTwoElements():
+  tree = BTree(right=BTree())
+  tree2 = tree.rotate_left()
+  assert len(tree2)==2
+  
 def test_addChildWorks():
   tree = BTree()
   ltree = BTree(left=BTree(), right=BTree(left=BTree()))

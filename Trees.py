@@ -13,7 +13,7 @@ class BTree:
     
   @property
   def uncle(self):
-    gp = self.grandparent()
+    gp = self.grandparent
     if gp is None:
       return None
     if self.parent == gp.left:
@@ -30,45 +30,84 @@ class BTree:
   
   # add sub-trees
   def add_left(self, child):
-    if (child is not None) & (not isinstance(child, typeof(self))):
-      self.left = typeof(self)(child)
+    if (child is not None) & (not isinstance(child, type(self))):
+      self.left = type(self)(value=child)
     else:
       self.left = child
-      
     if self.left is not None:
       self.left.parent = self
   
   def add_right(self, child):
-    if (child is not None) & (not isinstance(child, typeof(self))):
-      self.right = typeof(self)(child)
+    if (child is not None) & (not isinstance(child, type(self))):
+      self.right = type(self)(value=child)
     else:
       self.right = child
-      
     if self.right is not None:
       self.right.parent = self
   
   # right means moving myself to the right of my left child
   def rotate_right(self):
-    self.left.right = self
-    self.left = self.left.right
+    s = self
+    sl = self.left
+    sr = self.right
+    sp = self.parent
+    if self.left is not None:
+      slr = self.left.right
+    else:
+      slr = None
+      
+    if slr is not None:
+      slr.parent = s
+    if sl is not None:
+      sl.right = s
+      sl.parent = s.parent
+      if sp is not None:
+        if sp.left == s:
+          sp.left = sl
+        else:
+          sp.right = sl
+    s.parent = sl
+    if sl is not None:
+      s.left = sl.right
+    return sl
   
   # left means moving myself to the left of my right child
   def rotate_left(self):
-    self.right.left = self
-    self.right = self.right.left
+    s = self
+    sl = self.left
+    sr = self.right
+    sp = self.parent
+    if self.right is not None:
+      srl = self.right.left
+    else:
+      srl = None
+      
+    if srl is not None:
+      srl.parent = s
+    if sr is not None:
+      sr.left = s
+      sr.parent = s.parent
+      if sp is not None:
+        if sp.left == s:
+          sp.left = sr
+        else:
+          sp.right = sr
+    s.parent = sr
+    if sr is not None:
+      s.right = sr.left
+    return sr
 
   def replace_with(self, node):
     if self.parent is None:
-      return # do nothing... garbage collection will collect
-             # self once nothing references it anymore
+      if node is not None:
+        self.value = node.value # delete root node's value
+      else:
+        self.value = None
+      return
     if self.parent.right == self:
       self.parent.right = node
     else:
       self.parent.left = node
-
-  def _replace_if_none(self):
-    if self.value is None:
-      self.replace_with(None)
 
   # list protocol
   def __len__(self):
@@ -117,11 +156,11 @@ class RB_BTree(BTree):
   def _is_black(rb_btree):
     if rb_btree is None:
       return True #leaves are black
-    if typeof(rb_btree)==RB_BTree:
+    if type(rb_btree)==RB_BTree:
       return rb_btree.color == BLACK
     return False
   def _is_red(rb_btree):
-    if typeof(rb_btree)==RB_BTree:
+    if type(rb_btree)==RB_BTree:
       return RB_BTree._is_black(rb_btree)
     return False
 
@@ -132,30 +171,31 @@ class RB_BTree(BTree):
   # add sub-trees... but all added nodes must be red
   def add_left(self, child):
     super().add_left(child)
-    self.color = RED
+    if self.left is not None:
+      self.left.color = RED
   
   def add_right(self, child):
     super().add_right(child)
-    self.color = RED
+    if self.right is not None:
+      self.right.color = RED
     
   def insert(self, key, value):
     if self.value is None:
       self.value = (key, value)
-      self.color = RED
       self._insert_case1()
     elif self.value[0] == key:
       raise ValueError("key \"" + str(key) + "\" has already been inserted")
     elif key > self.value[0]:
       if self.right is None:
-        self.add_right(value=(key, value))
-        self.right.color = RED
+        print("adding to the right",(key,value))
+        self.add_right((key, value))
         self.right._insert_case1()
       else:
         self.right.insert(key,value)
     elif key < self.value[0]:
       if self.left is None:
-        self.add_left(value=(key, value))
-        self.left.color = RED
+        print("adding to the left",(key,value))
+        self.add_left((key, value))
         self.left._insert_case1()
       else:
         self.left.insert(key,value)
@@ -241,65 +281,22 @@ class RB_BTree(BTree):
     
   def _delete_one_child(self):
     child = (self.left, self.right)[self.left is None]
-    if child is None: # temporary node created to make code path the
-                      # same regardless of if this is a "Null" node or
-                      # a legit node
-      child = typeof(self)(value=None)
-    
     self.replace_with(child)
-    if self.color == BLACK:
-      if self._is_red(child):
-        child.color = BLACK
-      else
-        child._delete_case1()
-    child._replace_if_none()
-  
-  # replaced node's color was black, and child (now self) is black
-  # this tree now has 1 fewer black nodes en route to leaves
-  def _delete_case1(self):
-    # if this is the root of the tree, then we just eliminated one
-    # black leaf en route to ALL leaves, so we're done
-    if self.parent is not None:
-      # otherwise, there's still more work to do
-      self.delete_case2()
-  
-  # sibling is red... let's rotate the tree so that my sibling is now
-  # black instead... but it could be null
-  def _delete_case2(self):
-    if self._is_red(self.sibling):
-      self.parent.color = RED
-      self.sibling.color = BLACK
-      if self == self.parent.left:
-        self.parent.rotate_left()
-      else
-        self.parent.rotate_right()
-    _delete_case3(self):
-  
-  # sibling, parent, and self are black, but sibling may be None
-  def _delete_case3(self):
-    if (self.parent.color == BLACK) and
-       ((self.sibling is None) or (self._is_black(self.sibling.left))) and
-       ((self.sibling is None) or (self._is_black(self.sibling.right))):
-      if self.sibling is not None:
-        self.sibling.color = RED
-      self.parent._delete_case1()
-    else
-      self._delete_case4(self)
-  
-  # sibling and self are black, parent is red
-  def _delete_case4(self):
-    if (self.parent.color == RED) and
-       ((self.sibling is None) or (self._is_black(self.sibling.left))) and
-       ((self.sibling is None) or (self._is_black(self.sibling.right))):
-      if self.sibling is not None:
-        self.sibling.color = RED
-      self.parent.color = BLACK
-    else
-      self._delete_case5(self)
-      
-  def _delete_case5(self):
-    if (self == self.parent.left) and
-       ((self.sibling is None) or (self._is_black(self.sibling.right))):
-      if self.sibling is not None:
-        self.sibling.color = RED
+    if (self.color == RED) or (self.parent is None):
+      return
+    if (child is None) or (child.color == RED):
+      if (self.parent.color == BLACK) and (self.uncle.color == BLACK):
+        self.uncle.color = RED
+      elif (self.parent.color == BLACK) and (self.uncle.color == RED):
+        self.uncle.color = BLACK
+        if self == self.parent.left:
+          self.uncle.left.color = RED
+          self.parent.rotate_left()
+        else:
+          self.uncle.right.color = RED
+          self.parent.rotate_right()
+      else: # (self.parent.color == RED) and (self.uncle.color == BLACK)
+        self.parent.color = BLACK
+        self.uncle.color = RED
+    
         

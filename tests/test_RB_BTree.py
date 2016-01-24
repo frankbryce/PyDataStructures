@@ -65,36 +65,3 @@ def test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData():
   # make sure the rest are still there
   for i in range(1, 1001)[1::2]:
     assert tree.search("k"+str(i)) == i
-    
-def test_lworSimpleCases():
-  tree = RB_BTree()
-  assert tree.left is None
-  assert tree.left == tree.lwor
-  tree = RB_BTree(left=RB_BTree())
-  assert tree.left == tree.lwor
-  tree = RB_BTree(left=RB_BTree(left=RB_BTree(left=RB_BTree(), right=RB_BTree())))
-  assert tree.left == tree.lwor
-    
-def test_lworLessSimpleCase():
-  tree = RB_BTree(
-    left=RB_BTree(
-      left=RB_BTree(),
-      right=RB_BTree(
-        left=RB_BTree(),
-        right=RB_BTree(
-          right=RB_BTree()
-        )
-      )
-    ),
-    right=RB_BTree(
-      left=RB_BTree(),
-      right=RB_BTree(
-        right=RB_BTree()
-      )
-    )
-  )
-  assert len(tree.left) == len(tree.lwor)
-  ltor1 = list(tree.left.ltor())
-  ltor2 = list(tree.lwor.ltor())
-  for i in range(0,len(ltor1)):
-    assert ltor1[i] == ltor2[i]
