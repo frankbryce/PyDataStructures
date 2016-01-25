@@ -6,6 +6,12 @@ class BTree:
     self.value = value
     
   @property
+  def root(self):
+    if self.parent is None:
+      return self
+    return self.parent.root
+  
+  @property
   def grandparent(self):
     if self.parent is None:
       return None
@@ -27,6 +33,9 @@ class BTree:
     if self.parent.left == self:
       return self.parent.right
     return self.parent.left
+    
+  def is_leaf(self):
+    return (self.left is None) and (self.right is None)
   
   # add sub-trees
   def add_left(self, child):
@@ -60,15 +69,14 @@ class BTree:
       slr.parent = s
     if sl is not None:
       sl.right = s
-      sl.parent = s.parent
-      if sp is not None:
-        if sp.left == s:
-          sp.left = sl
-        else:
-          sp.right = sl
+      sl.parent = sp
+    if sp is not None:
+      if sp.left == s:
+        sp.left = sl
+      else:
+        sp.right = sl
     s.parent = sl
-    if sl is not None:
-      s.left = sl.right
+    s.left = slr
     return sl
   
   # left means moving myself to the left of my right child
@@ -86,28 +94,15 @@ class BTree:
       srl.parent = s
     if sr is not None:
       sr.left = s
-      sr.parent = s.parent
-      if sp is not None:
-        if sp.left == s:
-          sp.left = sr
-        else:
-          sp.right = sr
-    s.parent = sr
-    if sr is not None:
-      s.right = sr.left
-    return sr
-
-  def replace_with(self, node):
-    if self.parent is None:
-      if node is not None:
-        self.value = node.value # delete root node's value
+      sr.parent = sp
+    if sp is not None:
+      if sp.left == s:
+        sp.left = sr
       else:
-        self.value = None
-      return
-    if self.parent.right == self:
-      self.parent.right = node
-    else:
-      self.parent.left = node
+        sp.right = sr
+    s.parent = sr
+    s.right = srl
+    return sr
 
   # list protocol
   def __len__(self):
@@ -137,36 +132,36 @@ class BTree:
         yield ch
     
   # node generator right->left
-  def nodes_rtol(self):
+  def rtol(self):
     if self.right is not None:
-      for ch in self.right.nodes_rtol():
+      for ch in self.right.rtol():
         yield ch
     yield self
     if self.left is not None:
-      for ch in self.left.nodes_rtol():
+      for ch in self.left.rtol():
         yield ch
 
 RED = False 
 BLACK = True
 
 # Red Black Binary Tree
-class RB_BTree(BTree):  
-  # helper methods to account for None nodes being black
-  @staticmethod
-  def _is_black(rb_btree):
-    if rb_btree is None:
-      return True #leaves are black
-    if type(rb_btree)==RB_BTree:
-      return rb_btree.color == BLACK
-    return False
-  def _is_red(rb_btree):
-    if type(rb_btree)==RB_BTree:
-      return RB_BTree._is_black(rb_btree)
-    return False
-
+class RB_BTree(BTree):
   def __init__(self, **kwargs):
     super().__init__(**kwargs)
     self.color = BLACK
+
+  # list protocol
+  def __len__(self):
+    if self.value is None:
+      return 0
+    return super().__len__()
+  
+  # the height of the tree
+  @property
+  def height(self):
+    if self.value is None:
+      return 0
+    return super().height
   
   # add sub-trees... but all added nodes must be red
   def add_left(self, child):
@@ -187,37 +182,36 @@ class RB_BTree(BTree):
       raise ValueError("key \"" + str(key) + "\" has already been inserted")
     elif key > self.value[0]:
       if self.right is None:
-        print("adding to the right",(key,value))
         self.add_right((key, value))
         self.right._insert_case1()
       else:
         self.right.insert(key,value)
     elif key < self.value[0]:
       if self.left is None:
-        print("adding to the left",(key,value))
         self.add_left((key, value))
         self.left._insert_case1()
       else:
         self.left.insert(key,value)
     else:
       raise ValueError("Invalid key: " + str(key))
+    return self.root
     
   def _insert_case1(self):
     if self.parent is None:
-      self.color = BLACK #finished
+      self.color = BLACK
     else:
       self._insert_case2()
       
   def _insert_case2(self):
     if self.parent.color == BLACK:
-      return # do nothing
+      return
     self._insert_case3()
   
   #parent is red
   def _insert_case3(self):
     if (self.uncle is None) or (self.uncle.color  == BLACK):
       self._insert_case4()
-      return #finished
+      return
       
     # uncle and parent are both red
     self.parent.color = BLACK
@@ -267,7 +261,7 @@ class RB_BTree(BTree):
   def delete(self, key):
     node = self._srch_node(key)
     if (node is None) or (node.value is None):
-      return
+      return self
     if (node.left is not None) and (node.right is not None):
       # node is internal node, so get smallest item from right
       # subtree and switch the two nodes.  Then, we delete the
@@ -278,25 +272,105 @@ class RB_BTree(BTree):
       smallestRight._delete_one_child()
     else:
       node._delete_one_child()
+    return self.root
     
   def _delete_one_child(self):
     child = (self.left, self.right)[self.left is None]
-    self.replace_with(child)
-    if (self.color == RED) or (self.parent is None):
-      return
-    if (child is None) or (child.color == RED):
-      if (self.parent.color == BLACK) and (self.uncle.color == BLACK):
-        self.uncle.color = RED
-      elif (self.parent.color == BLACK) and (self.uncle.color == RED):
-        self.uncle.color = BLACK
-        if self == self.parent.left:
-          self.uncle.left.color = RED
-          self.parent.rotate_left()
-        else:
-          self.uncle.right.color = RED
-          self.parent.rotate_right()
-      else: # (self.parent.color == RED) and (self.uncle.color == BLACK)
-        self.parent.color = BLACK
-        self.uncle.color = RED
+    selfcolor = self.color
+    sibling = self.sibling
+    parent = self.parent
+    if parent is not None:
+      wasLeft = self == parent.left
     
-        
+    ## replace self with child
+    if parent is None:
+      if child is not None:
+        self.value = child.value
+        self.left = child.left
+        self.right = child.right
+        self.color = child.color
+      else:
+        self.value = None # delete root's value
+      return
+    if wasLeft:
+      parent.left = child
+    else:
+      parent.right = child
+    if child is not None:
+      child.parent = parent
+    ## end replace self with child
+    
+    if (selfcolor == RED) or (parent is None):
+      return
+    if (child is not None) and (child.color==RED):
+      child.color = BLACK
+      return
+    if (parent.color == BLACK) and (sibling.color == BLACK):
+      if sibling.right is not None:
+        sibling.right.color = BLACK
+      if sibling.left is not None:
+        sibling.left.color = BLACK
+      if wasLeft:
+        parent.rotate_left()
+      else:
+        parent.rotate_right()
+      parent.color = RED
+    elif (parent.color == BLACK) and (sibling.color == RED):
+      sibling.color = BLACK
+      if wasLeft:
+        sibling.left.color = RED
+        parent.rotate_left()
+      else:
+        sibling.right.color = RED
+        parent.rotate_right()
+    else: # (parent.color == RED) and (sibling.color == BLACK)
+      parent.color = BLACK
+      sibling.color = RED
+
+from math import log
+def _assert_black_height(t1, t2):
+  if t1 is None:
+    h1 = 1
+  else:
+    h1 = (0,1)[t1.color==BLACK] + _assert_black_height(t1.left, t1.right)
+    
+  if t2 is None:
+    h2 = 1
+  else:
+    h2 = (0,1)[t2.color==BLACK] + _assert_black_height(t2.left, t2.right)
+  assert h1 == h2
+  return h1
+    
+def validate_RB_BTree(t):
+  if not isinstance(t, RB_BTree):
+    raise ValueError("input must be an RB_BTree")
+    
+  # assert max height of the tree
+  assert t.height <= 2*log(len(t)+1,2)
+  
+  # assert black heights
+  _assert_black_height(t.left, t.right)
+  
+  # red node test
+  for n in t.ltor():
+    if n.color == RED:
+      assert (n.left is None) or (n.left.color == BLACK)
+      assert (n.right is None) or (n.right.color == BLACK)
+    
+class RevBTree:
+  def __init__(self, btree):
+    if not isinstance(btree, BTree):
+      raise ValueError("btree must be a derived type of BTree")
+    self.BTree = btree
+  
+  @property
+  def left(self):
+    return RevBTree(self._btree.right)
+  
+  @property
+  def right(self):
+    return RevBTree(self._btree.left)
+    
+  @property
+  def BTree(self):
+    return self.BTree

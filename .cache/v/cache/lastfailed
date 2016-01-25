@@ -1,5 +1,8 @@
 {
-  "tests/test_BTree.py::test_TreeRotationWithTwoElements": true,
+  "tests/test_RB_BTree.py::test_insert11TimesThenDelete11TimesInOrderThenSearchReturnsNone": true,
+  "tests/test_RB_BTree.py::test_insert5TimesThenDelete5TimesInOrderThenSearchReturnsNone": true,
+  "tests/test_RB_BTree.py::test_insert7TimesThenDelete7TimesInOrderThenSearchReturnsNone": true,
+  "tests/test_RB_BTree.py::test_insert9TimesThenDelete9TimesInOrderThenSearchReturnsNone": true,
   "tests/test_RB_BTree.py::test_manyInsertsAndSomeDeletesReturnsRemainingValues": true,
   "tests/test_RB_BTree.py::test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData": true,
   "tests/test_RB_BTree.py::test_manyInsertsReturnsCorrectValues": true,
