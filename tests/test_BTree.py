@@ -3,61 +3,61 @@ import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 import pytest
-from Trees import BTree
+from Trees import BinTree
 
 def test_NotNone():
-  tree = BTree()
+  tree = BinTree()
   assert tree is not None
 
 def test_SettingValueInInitIsStoredInTree():
-  tree = BTree(value=5)
+  tree = BinTree(value=5)
   assert tree.value == 5
 
 def test_SettingLeftTreeSetsValue():
-  tree = BTree(left=BTree())
+  tree = BinTree(left=BinTree())
   assert tree.left is not None
 
 def test_SettingRightTreeSetsValue():
-  tree = BTree(right=BTree())
+  tree = BinTree(right=BinTree())
   assert tree.right is not None
 
 def test_SettingLeftTreeToBTreeDoesNotFails():
-  tree = BTree(left=15)
+  tree = BinTree(left=15)
   assert tree.left.value == 15
 
 def test_SettingRightTreeToBTreeDoesNotFails():
-  tree = BTree(right="BTree")
-  assert tree.right.value is "BTree"
+  tree = BinTree(right="BinTree")
+  assert tree.right.value is "BinTree"
 
 def test_SettingLeftTreeToNoneDoesNotRaise():
-  tree = BTree(left=None)
+  tree = BinTree(left=None)
   assert tree is not None
 
 def test_SettingRightTreeToNoneDoesNotRaise():
-  tree = BTree(right=None)
+  tree = BinTree(right=None)
   assert tree is not None
   
 def test_BlankTreeHasLen1():
-  tree = BTree()
+  tree = BinTree()
   assert len(tree)==1
   
 def test_TreeWithLeftChildHasLen2():
-  tree = BTree(left=BTree())
+  tree = BinTree(left=BinTree())
   assert len(tree)==2
   
 def test_TreeWithRightChildHasLen2():
-  tree = BTree(right=BTree())
+  tree = BinTree(right=BinTree())
   assert len(tree)==2
   
 def test_TreeRotationWithTwoElements():
-  tree = BTree(right=BTree())
+  tree = BinTree(right=BinTree())
   tree2 = tree.rotate_left()
   assert len(tree2)==2
   
 def test_addChildWorks():
-  tree = BTree()
-  ltree = BTree(left=BTree(), right=BTree(left=BTree()))
-  rtree = BTree(left=BTree(left=BTree()), right=BTree(left=BTree(),right=BTree()))
+  tree = BinTree()
+  ltree = BinTree(left=BinTree(), right=BinTree(left=BinTree()))
+  rtree = BinTree(left=BinTree(left=BinTree()), right=BinTree(left=BinTree(),right=BinTree()))
   
   tree_len = len(tree)
   ltree_len = len(ltree)
@@ -72,52 +72,52 @@ def test_addChildWorks():
   
   
 def test_TreeWithRightChildHasLen2():
-  tree = BTree(right=BTree())
+  tree = BinTree(right=BinTree())
   assert len(tree)==2
   
 def test_CompoundTreeHasCorrectLength():
-  tree = BTree(
-    left=BTree(
-      left=BTree(),
-      right=BTree(
-        left=BTree(),
-        right=BTree(
-          right=BTree()
+  tree = BinTree(
+    left=BinTree(
+      left=BinTree(),
+      right=BinTree(
+        left=BinTree(),
+        right=BinTree(
+          right=BinTree()
         )
       )
     ),
-    right=BTree(
-      left=BTree(),
-      right=BTree(
-        right=BTree()
+    right=BinTree(
+      left=BinTree(),
+      right=BinTree(
+        right=BinTree()
       )
     )
   )
   assert len(tree)==11
   
 def test_CompoundTreeHasCorrectHeight():
-  tree = BTree(
-    left=BTree(
-      left=BTree(),
-      right=BTree(
-        left=BTree(),
-        right=BTree(
-          right=BTree()
+  tree = BinTree(
+    left=BinTree(
+      left=BinTree(),
+      right=BinTree(
+        left=BinTree(),
+        right=BinTree(
+          right=BinTree()
         )
       )
     ),
-    right=BTree(
-      left=BTree(),
-      right=BTree(
-        right=BTree()
+    right=BinTree(
+      left=BinTree(),
+      right=BinTree(
+        right=BinTree()
       )
     )
   )
   assert tree.height==5
   
 def test_LeftRotationWorksWith2Nodes():
-  root = BTree()
-  right = BTree()
+  root = BinTree()
+  right = BinTree()
   root.add_right(right)
   newRoot = root.rotate_left()
   assert newRoot == right
@@ -129,8 +129,8 @@ def test_LeftRotationWorksWith2Nodes():
   assert root.right == None
   
 def test_RightRotationWorksWith2Nodes():
-  root = BTree()
-  left = BTree()
+  root = BinTree()
+  left = BinTree()
   root.add_left(left)
   newRoot = root.rotate_right()
   assert newRoot == left
@@ -142,9 +142,9 @@ def test_RightRotationWorksWith2Nodes():
   assert root.right == None
   
 def test_LeftRotationWorksWith3Nodes():
-  root = BTree()
-  left = BTree()
-  right = BTree()
+  root = BinTree()
+  left = BinTree()
+  right = BinTree()
   root.add_left(left)
   root.add_right(right)
   newRoot = root.rotate_left()
@@ -160,9 +160,9 @@ def test_LeftRotationWorksWith3Nodes():
   assert left.right == None
   
 def test_RightRotationWorksWith3Nodes():
-  root = BTree()
-  left = BTree()
-  right = BTree()
+  root = BinTree()
+  left = BinTree()
+  right = BinTree()
   root.add_left(left)
   root.add_right(right)
   newRoot = root.rotate_right()
@@ -178,10 +178,10 @@ def test_RightRotationWorksWith3Nodes():
   assert right.right == None
   
 def test_LeftRotationWorksWith4Nodes():
-  root = BTree()
-  left = BTree()
-  right = BTree()
-  rightleft = BTree()
+  root = BinTree()
+  left = BinTree()
+  right = BinTree()
+  rightleft = BinTree()
   root.add_left(left)
   root.add_right(right)
   right.add_left(rightleft)
@@ -201,10 +201,10 @@ def test_LeftRotationWorksWith4Nodes():
   assert rightleft.right == None
   
 def test_RightRotationWorksWith4Nodes():
-  root = BTree()
-  left = BTree()
-  right = BTree()
-  leftright = BTree()
+  root = BinTree()
+  left = BinTree()
+  right = BinTree()
+  leftright = BinTree()
   root.add_left(left)
   root.add_right(right)
   left.add_right(leftright)

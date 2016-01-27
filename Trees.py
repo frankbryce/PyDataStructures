@@ -1,4 +1,4 @@
-class BTree:
+class BinTree:
   def __init__(self, value=None, left=None, right=None):
     self.parent = None
     self.add_left(left)
@@ -145,7 +145,7 @@ RED = False
 BLACK = True
 
 # Red Black Binary Tree
-class RB_BTree(BTree):
+class RB_BTree(BinTree):
   def __init__(self, **kwargs):
     super().__init__(**kwargs)
     self.color = BLACK
@@ -357,11 +357,11 @@ def validate_RB_BTree(t):
       assert (n.left is None) or (n.left.color == BLACK)
       assert (n.right is None) or (n.right.color == BLACK)
     
-class RevBTree(BTree):
+class RevBTree(BinTree):
   def __init__(self, btree):
     self._tree = btree
-    if (not isinstance(btree, BTree)) and (btree is not None):
-      raise ValueError("btree must be a derived type of BTree")
+    if (not isinstance(btree, BinTree)) and (btree is not None):
+      raise ValueError("btree must be a derived type of BinTree")
     super().__init__()
   
   @property
@@ -385,6 +385,16 @@ class RevBTree(BTree):
     self.Tree.left = value
   
   @property
+  def parent(self):
+    if self.Tree.parent is None:
+      return None
+    return RevBTree(self.Tree.parent)
+    
+  @right.setter
+  def parent(self, value):
+    self.Tree.parent = value
+  
+  @property
   def value(self):
     return self.Tree.value
     
@@ -396,4 +406,95 @@ class RevBTree(BTree):
   def Tree(self):
     return self._tree
     
+class BaseTree:
+  def __init__(self):
+    self.root = None
+    
+  def insert(self, key, value):
+    if self.root == None:
+      self.root = BinTree(value=(key,value))
+      return
+    if self.root.value is None:
+      self.root.value = (key, value)
+    elif self.root.value[0] == key:
+      raise ValueError("key \"" + str(key) + "\" has already been inserted")
+    elif key > self.root.value[0]:
+      if self.root.right is None:
+        self.root.add_right((key, value))
+      else:
+        self.root.right.insert(key,value)
+    elif key < self.root.value[0]:
+      if self.root.left is None:
+        self.root.add_left((key, value))
+      else:
+        self.root.left.insert(key,value)
+    else:
+      raise ValueError("Invalid key: " + str(key))
+    return self.root
+    
+  def _srch_node(self, key):
+    if self.root == None:
+      return None
+    if (self.root.value is None) or (self.root.value[0] == key):
+      return self.root
+    elif key > self.root.value[0]:
+      if self.root.right is not None:
+        return self.root.right._srch_node(key)
+    elif key < self.root.value[0]:
+      if self.root.left is not None:
+        return self.root.left._srch_node(key)
+    return None
+    
+  def search(self, key):
+    node = self._srch_node(key)
+    if (node is None) or (node.value is None):
+      return None
+    return node.value[1]
+    
+  def delete(self, key):
+    node = self._srch_node(key)
+    if node is None:
+      return
+      
+    if node is self.root:
+      self.root = None
+      return
+      
+    if (node.left is None) and (node.right is None):
+      if (node.parent.left == node):
+        node.parent.left = None
+      else:
+        node.parent.right = None
+      return
+    
+    if (node.left is None) or (node.right is None):
+      replaceNode = node.left if (node.left is not None) else node.right
+    else:
+      replaceNode = next(node.right.ltor())
+      
+    replaceNode.parent = node.parent
+    if node.parent is not None:
+      if node.parent.left == node:
+        node.parent.left = replaceNode
+      else:
+        node.parent.right = replaceNode
+    
+    # clean up to make garbage collection happen asap (no circular refs)
+    node.parent = None
+    node.left = None
+    node.right = None
+    
+    
+class AVL_Tree:
+  def __init__(self):
+    root = None
+    
+  def insert(self, key, value):
+    pass
+    
+  def search(self, key):
+    pass
+    
+  def delete(self, key):
+    pass
   
