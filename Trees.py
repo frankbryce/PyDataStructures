@@ -357,20 +357,43 @@ def validate_RB_BTree(t):
       assert (n.left is None) or (n.left.color == BLACK)
       assert (n.right is None) or (n.right.color == BLACK)
     
-class RevBTree:
+class RevBTree(BTree):
   def __init__(self, btree):
-    if not isinstance(btree, BTree):
+    self._tree = btree
+    if (not isinstance(btree, BTree)) and (btree is not None):
       raise ValueError("btree must be a derived type of BTree")
-    self.BTree = btree
+    super().__init__()
   
   @property
   def left(self):
-    return RevBTree(self._btree.right)
+    if self.Tree.right is None:
+      return None
+    return RevBTree(self.Tree.right)
+    
+  @left.setter
+  def left(self, value):
+    self.Tree.right = value
   
   @property
   def right(self):
-    return RevBTree(self._btree.left)
+    if self.Tree.left is None:
+      return None
+    return RevBTree(self.Tree.left)
     
+  @right.setter
+  def right(self, value):
+    self.Tree.left = value
+  
   @property
-  def BTree(self):
-    return self.BTree
+  def value(self):
+    return self.Tree.value
+    
+  @value.setter
+  def value(self, value):
+    self.Tree.value = value
+  
+  @property
+  def Tree(self):
+    return self._tree
+    
+  
