@@ -114,3 +114,112 @@ def test_CompoundTreeHasCorrectHeight():
     )
   )
   assert tree.height==5
+  
+def test_LeftRotationWorksWith2Nodes():
+  root = BTree()
+  right = BTree()
+  root.add_right(right)
+  newRoot = root.rotate_left()
+  assert newRoot == right
+  assert newRoot.left == root
+  assert newRoot.parent == None
+  assert newRoot.right == None
+  assert root.parent == newRoot
+  assert root.left == None
+  assert root.right == None
+  
+def test_RightRotationWorksWith2Nodes():
+  root = BTree()
+  left = BTree()
+  root.add_left(left)
+  newRoot = root.rotate_right()
+  assert newRoot == left
+  assert newRoot.right == root
+  assert newRoot.parent == None
+  assert newRoot.left == None
+  assert root.parent == newRoot
+  assert root.left == None
+  assert root.right == None
+  
+def test_LeftRotationWorksWith3Nodes():
+  root = BTree()
+  left = BTree()
+  right = BTree()
+  root.add_left(left)
+  root.add_right(right)
+  newRoot = root.rotate_left()
+  assert newRoot == right
+  assert newRoot.left == root
+  assert newRoot.parent == None
+  assert newRoot.right == None
+  assert root.parent == newRoot
+  assert root.left == left
+  assert root.right == None
+  assert left.parent == root
+  assert left.left == None
+  assert left.right == None
+  
+def test_RightRotationWorksWith3Nodes():
+  root = BTree()
+  left = BTree()
+  right = BTree()
+  root.add_left(left)
+  root.add_right(right)
+  newRoot = root.rotate_right()
+  assert newRoot == left
+  assert newRoot.right == root
+  assert newRoot.parent == None
+  assert newRoot.left == None
+  assert root.parent == newRoot
+  assert root.left == None
+  assert root.right == right
+  assert right.parent == root
+  assert right.left == None
+  assert right.right == None
+  
+def test_LeftRotationWorksWith4Nodes():
+  root = BTree()
+  left = BTree()
+  right = BTree()
+  rightleft = BTree()
+  root.add_left(left)
+  root.add_right(right)
+  right.add_left(rightleft)
+  newRoot = root.rotate_left()
+  assert newRoot == right
+  assert newRoot.left == root
+  assert newRoot.parent == None
+  assert newRoot.right == None
+  assert root.parent == newRoot
+  assert root.left == left
+  assert root.right == rightleft
+  assert left.parent == root
+  assert left.left == None
+  assert left.right == None
+  assert rightleft.parent == root
+  assert rightleft.left == None
+  assert rightleft.right == None
+  
+def test_RightRotationWorksWith4Nodes():
+  root = BTree()
+  left = BTree()
+  right = BTree()
+  leftright = BTree()
+  root.add_left(left)
+  root.add_right(right)
+  left.add_right(leftright)
+  newRoot = root.rotate_right()
+  assert newRoot == left
+  assert newRoot.left == None
+  assert newRoot.parent == None
+  assert newRoot.right == root
+  assert root.parent == newRoot
+  assert root.left == leftright
+  assert root.right == right
+  assert right.parent == root
+  assert right.left == None
+  assert right.right == None
+  assert leftright.parent == root
+  assert leftright.left == None
+  assert leftright.right == None
+  
