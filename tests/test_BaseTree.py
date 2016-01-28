@@ -28,17 +28,33 @@ def test_insert3TimesThenDelete3TimesThenSearchReturnsNone():
   assert tree.search("k5") == None
   assert tree.search("k6") == None
   assert tree.search("k7") == None
-
+  
+def _validate(tree):
+  if tree.root is None:
+    return
+  last = None
+  for node in tree.root.ltor():
+    # assert ordering
+    if last is None:
+      last = node.value[0]
+    else:
+      assert last < node.value[0]
+      last = node.value[0]
+      
+    # assert parents make sense
+    if node != tree.root:
+      assert node==node.parent.left or node==node.parent.right
+  
 def inOrderTest(n):
   tree = BaseTree()
   for i in range(0,n):
     tree.insert("k"+str(i),i)
+    _validate(tree)
     assert len(tree) == i+1
-    validate(tree)
   for i in range(0,n):
     tree.delete("k"+str(i))
+    _validate(tree)
     assert len(tree) == n-(i+1)
-    validate(tree)
   for i in range(0,n):
     assert tree.search("k"+str(i)) == None
   
@@ -94,10 +110,12 @@ def test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData():
   tree = BaseTree()
   for i in range(1, 1001):
     tree.insert("k"+str(i), i)
+    _validate(tree)
     
   # delete every other
   for i in range(1, 1001)[::2]:
     tree.delete("k"+str(i))
+    _validate(tree)
     
   # make sure deletions are gone
   for i in range(1, 1001)[::2]:

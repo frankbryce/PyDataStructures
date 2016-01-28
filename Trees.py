@@ -410,40 +410,41 @@ class BaseTree:
   def __init__(self):
     self.root = None
     
+  def __len__(self):
+    if self.root is None:
+      return 0
+    return len(self.root)
+    
   def insert(self, key, value):
-    if self.root == None:
+    if self.root is None:
       self.root = BinTree(value=(key,value))
       return
-    if self.root.value is None:
-      self.root.value = (key, value)
-    elif self.root.value[0] == key:
-      raise ValueError("key \"" + str(key) + "\" has already been inserted")
-    elif key > self.root.value[0]:
-      if self.root.right is None:
-        self.root.add_right((key, value))
+      
+    node = self.root
+    while True:
+      if key > node.value[0]:
+        if node.right is None:
+          node.add_right(BinTree(value=(key,value)))
+          return
+        node = node.right
+      elif key < node.value[0]:
+        if node.left is None:
+          node.add_left(BinTree(value=(key,value)))
+          return
+        node = node.left
       else:
-        self.root.right.insert(key,value)
-    elif key < self.root.value[0]:
-      if self.root.left is None:
-        self.root.add_left((key, value))
-      else:
-        self.root.left.insert(key,value)
-    else:
-      raise ValueError("Invalid key: " + str(key))
-    return self.root
+        raise ValueError("Same key inserted twice: " + str(key))
     
   def _srch_node(self, key):
     if self.root == None:
       return None
-    if (self.root.value is None) or (self.root.value[0] == key):
-      return self.root
-    elif key > self.root.value[0]:
-      if self.root.right is not None:
-        return self.root.right._srch_node(key)
-    elif key < self.root.value[0]:
-      if self.root.left is not None:
-        return self.root.left._srch_node(key)
-    return None
+    node = self.root
+    while (node is not None) and (node.value[0]!=key):
+      if key > node.value[0]:
+        node = node.right
+      elif key < node.value[0]:
+        node = node.left
+    return node
     
   def search(self, key):
     node = self._srch_node(key)
@@ -453,37 +454,55 @@ class BaseTree:
     
   def delete(self, key):
     node = self._srch_node(key)
+    
     if node is None:
       return
       
-    if node is self.root:
-      self.root = None
-      return
-      
     if (node.left is None) and (node.right is None):
-      if (node.parent.left == node):
+      if self.root == node:
+        self.root = None
+      elif node.parent.left == node:
         node.parent.left = None
       else:
         node.parent.right = None
       return
     
-    if (node.left is None) or (node.right is None):
-      replaceNode = node.left if (node.left is not None) else node.right
-    else:
+    if node.left is None:
       replaceNode = next(node.right.ltor())
+    else:
+      replaceNode = next(node.left.rtol())
+    
+    replNodeCh = replaceNode.left if (replaceNode.right is None) else replaceNode.right
+    if replNodeCh is not None:
+      replNodeCh.parent = replaceNode if (replaceNode.parent == node) else replaceNode.parent
+      if replNodeCh.parent.left == replaceNode:
+        replNodeCh.parent.left = replNodeCh
+      else:
+        replNodeCh.parent.right = replNodeCh
+    else:
+      if replaceNode.parent.left == replaceNode:
+        replaceNode.parent.left = None
+      else:
+        replaceNode.parent.right = None
+    
+    if (node.left is not replaceNode):
+      replaceNode.left = node.left
+      if node.left is not None:
+        node.left.parent = replaceNode
+    if (node.right is not replaceNode):
+      replaceNode.right = node.right
+      if node.right is not None:
+        node.right.parent = replaceNode
       
-    replaceNode.parent = node.parent
-    if node.parent is not None:
+    if node is self.root:
+      self.root = replaceNode
+      self.root.parent = None
+    else:
       if node.parent.left == node:
         node.parent.left = replaceNode
       else:
         node.parent.right = replaceNode
-    
-    # clean up to make garbage collection happen asap (no circular refs)
-    node.parent = None
-    node.left = None
-    node.right = None
-    
+      replaceNode.parent = node.parent
     
 class AVL_Tree:
   def __init__(self):
