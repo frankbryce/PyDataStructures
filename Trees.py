@@ -71,7 +71,7 @@ class BinTree:
     if getattr(node,prop) is not None:
       getattr(node,prop).parent = node
   
-  def swap(self, node):
+  def swap_node(self, node):
     if node is None:
       raise ValueError("node to swap with cannot be None")
     
@@ -125,6 +125,14 @@ class BinTree:
       self._swap_prop(node, "left")
     if rt:
       self._swap_prop(node, "right")
+      
+  def swap_val(self, node):
+    v = self.value
+    self.value = node.value
+    node.value = v
+    
+  def swap(self,node):
+    self.swap_val(node)
   
   # right means moving myself to the right of my left child
   def rotate_right(self):
@@ -175,13 +183,6 @@ class BinTree:
     s.parent = sr
     s.right = srl
     return sr
-
-  # list protocol
-  def __len__(self):
-    count = 0
-    for ch in self.ltor():
-      count += 1
-    return count
   
   # the height of the tree
   @property
@@ -213,6 +214,16 @@ class BinTree:
       for ch in self.left.rtol():
         yield ch
         
+  # list protocol
+  def __len__(self):
+    count = 0
+    for ch in self.ltor():
+      count += 1
+    return count
+    
+  def __cmp__(self, node):
+    return self.value.__cmp__(node.value)
+        
   def __str__(self, depth=0):
     ret = ""
 
@@ -228,6 +239,168 @@ class BinTree:
       ret += self.left.__str__(depth + 1)
 
     return ret
+  
+# experiment that may or may not be useful  
+class RevBTree(BinTree):
+  def __init__(self, btree):
+    self._tree = btree
+    if (not isinstance(btree, BinTree)) and (btree is not None):
+      raise ValueError("btree must be a derived type of BinTree")
+    super().__init__()
+  
+  @property
+  def left(self):
+    if self.Tree.right is None:
+      return None
+    return RevBTree(self.Tree.right)
+    
+  @left.setter
+  def left(self, value):
+    self.Tree.right = value
+  
+  @property
+  def right(self):
+    if self.Tree.left is None:
+      return None
+    return RevBTree(self.Tree.left)
+    
+  @right.setter
+  def right(self, value):
+    self.Tree.left = value
+  
+  @property
+  def parent(self):
+    if self.Tree.parent is None:
+      return None
+    return RevBTree(self.Tree.parent)
+    
+  @right.setter
+  def parent(self, value):
+    self.Tree.parent = value
+  
+  @property
+  def value(self):
+    return self.Tree.value
+    
+  @value.setter
+  def value(self, value):
+    self.Tree.value = value
+  
+  @property
+  def Tree(self):
+    return self._tree
+
+class _val:
+  def __init__(self, key, value):
+    self.key = key
+    self.value = value
+  
+  def __lt__(self, val):
+    if not isinstance(val, _val):
+      return NotImplemented
+    return self.key < val.key
+  def __le__(self, val):
+    if not isinstance(val, _val):
+      return NotImplemented
+    return self.key <= val.key
+  def __gt__(self, val):
+    if not isinstance(val, _val):
+      return NotImplemented
+    return self.key > val.key
+  def __ge__(self, val):
+    if not isinstance(val, _val):
+      return NotImplemented
+    return self.key >= val.key
+  def __eq__(self, val):
+    if not isinstance(val, _val):
+      return NotImplemented
+    return self.key == val.key
+  def __ne__(self, val):
+    if not isinstance(val, _val):
+      return NotImplemented
+    return self.key != val.key
+  
+  def __str__(self):
+    return "(k: " + str(self.key) + ", v: " + str(self.value) + ")"
+
+class BaseTree:
+  def __init__(self):
+    self.root = None
+    
+  def __len__(self):
+    if self.root is None:
+      return 0
+    return len(self.root)
+    
+  def insert(self, key, value):
+    if self.root is None:
+      self.root = BinTree(value=_val(key,value))
+      return
+      
+    node = self.root
+    while True:
+      if key > node.value.key:
+        if node.right is None:
+          node.add_right(BinTree(value=_val(key,value)))
+          return
+        node = node.right
+      elif key < node.value.key:
+        if node.left is None:
+          node.add_left(BinTree(value=_val(key,value)))
+          return
+        node = node.left
+      else:
+        raise ValueError("Same key inserted twice: " + str(key))
+    
+  def _srch_node(self, key):
+    if self.root == None:
+      return None
+    node = self.root
+    while (node is not None) and (node.value.key != key):
+      if key > node.value.key:
+        node = node.right
+      elif key < node.value.key:
+        node = node.left
+    return node
+    
+  def search(self, key):
+    node = self._srch_node(key)
+    if (node is None) or (node.value is None):
+      return None
+    return node.value.value
+  
+  def delete(self, key):
+    node = self._srch_node(key)
+    if node is None:
+      return
+      
+    while not node.is_leaf():
+      if node.left is None:
+        nxtNode = next(node.right.ltor())
+      else:
+        nxtNode = next(node.left.rtol())
+      node.swap_val(nxtNode)
+      node = nxtNode
+      
+    if self.root == node:
+      self.root = None
+    elif node.parent.left == node:
+      node.parent.left = None
+    else:
+      node.parent.right = None
+    
+class AVL_Tree:
+  def __init__(self):
+    root = None
+    
+  def insert(self, key, value):
+    pass
+    
+  def search(self, key):
+    pass
+    
+  def delete(self, key):
+    pass
 
 RED = False 
 BLACK = True
@@ -266,15 +439,15 @@ class RB_BTree(BinTree):
     if self.value is None:
       self.value = (key, value)
       self._insert_case1()
-    elif self.value[0] == key:
+    elif self.value.key == key:
       raise ValueError("key \"" + str(key) + "\" has already been inserted")
-    elif key > self.value[0]:
+    elif key > self.value.key:
       if self.right is None:
         self.add_right((key, value))
         self.right._insert_case1()
       else:
         self.right.insert(key,value)
-    elif key < self.value[0]:
+    elif key < self.value.key:
       if self.left is None:
         self.add_left((key, value))
         self.left._insert_case1()
@@ -330,12 +503,12 @@ class RB_BTree(BinTree):
       self.grandparent.rotate_left()
     
   def _srch_node(self, key):
-    if (self.value is None) or (self.value[0] == key):
+    if (self.value is None) or (self.value.key == key):
       return self
-    elif key > self.value[0]:
+    elif key > self.value.key:
       if self.right is not None:
         return self.right._srch_node(key)
-    elif key < self.value[0]:
+    elif key < self.value.key:
       if self.left is not None:
         return self.left._srch_node(key)
     return None
@@ -344,7 +517,7 @@ class RB_BTree(BinTree):
     node = self._srch_node(key)
     if (node is None) or (node.value is None):
       return None
-    return node.value[1]
+    return node.value.value
     
   def delete(self, key):
     node = self._srch_node(key)
@@ -444,141 +617,4 @@ def validate_RB_BTree(t):
     if n.color == RED:
       assert (n.left is None) or (n.left.color == BLACK)
       assert (n.right is None) or (n.right.color == BLACK)
-    
-class RevBTree(BinTree):
-  def __init__(self, btree):
-    self._tree = btree
-    if (not isinstance(btree, BinTree)) and (btree is not None):
-      raise ValueError("btree must be a derived type of BinTree")
-    super().__init__()
-  
-  @property
-  def left(self):
-    if self.Tree.right is None:
-      return None
-    return RevBTree(self.Tree.right)
-    
-  @left.setter
-  def left(self, value):
-    self.Tree.right = value
-  
-  @property
-  def right(self):
-    if self.Tree.left is None:
-      return None
-    return RevBTree(self.Tree.left)
-    
-  @right.setter
-  def right(self, value):
-    self.Tree.left = value
-  
-  @property
-  def parent(self):
-    if self.Tree.parent is None:
-      return None
-    return RevBTree(self.Tree.parent)
-    
-  @right.setter
-  def parent(self, value):
-    self.Tree.parent = value
-  
-  @property
-  def value(self):
-    return self.Tree.value
-    
-  @value.setter
-  def value(self, value):
-    self.Tree.value = value
-  
-  @property
-  def Tree(self):
-    return self._tree
-    
-class BaseTree:
-  def __init__(self):
-    self.root = None
-    
-  def __len__(self):
-    if self.root is None:
-      return 0
-    return len(self.root)
-    
-  def insert(self, key, value):
-    if self.root is None:
-      self.root = BinTree(value=(key,value))
-      return
-      
-    node = self.root
-    while True:
-      if key > node.value[0]:
-        if node.right is None:
-          node.add_right(BinTree(value=(key,value)))
-          return
-        node = node.right
-      elif key < node.value[0]:
-        if node.left is None:
-          node.add_left(BinTree(value=(key,value)))
-          return
-        node = node.left
-      else:
-        raise ValueError("Same key inserted twice: " + str(key))
-    
-  def _srch_node(self, key):
-    if self.root == None:
-      return None
-    node = self.root
-    while (node is not None) and (node.value[0]!=key):
-      if key > node.value[0]:
-        node = node.right
-      elif key < node.value[0]:
-        node = node.left
-    return node
-    
-  def search(self, key):
-    node = self._srch_node(key)
-    if (node is None) or (node.value is None):
-      return None
-    return node.value[1]
-    
-  def _swap(self, n1, n2):
-    if n1 == self.root:
-      self.root = n2
-    elif n2 == self.root:
-      self.root = n1
-    n1.swap(n2)
-  
-  def _delNode(self, node):
-    if (node.left is None) and (node.right is None):
-      if self.root == node:
-        self.root = None
-      elif node.parent.left == node:
-        node.parent.left = None
-      else:
-        node.parent.right = None
-      return
-      
-    if node.left is None:
-      self._swap(node, next(node.right.ltor()))
-    else:
-      self._swap(node, next(node.left.rtol()))
-    self._delNode(node)
-  
-  def delete(self, key):
-    node = self._srch_node(key)
-    if node is None:
-      return
-    self._delNode(node)
-    
-class AVL_Tree:
-  def __init__(self):
-    root = None
-    
-  def insert(self, key, value):
-    pass
-    
-  def search(self, key):
-    pass
-    
-  def delete(self, key):
-    pass
   

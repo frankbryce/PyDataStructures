@@ -36,10 +36,10 @@ def _validate(tree):
   for node in tree.root.ltor():
     # assert ordering
     if last is None:
-      last = node.value[0]
+      last = node.value.key
     else:
-      assert last < node.value[0]
-      last = node.value[0]
+      assert last < node.value.key
+      last = node.value.key
       
     # assert parents make sense
     if node != tree.root:
