@@ -223,3 +223,98 @@ def test_RightRotationWorksWith4Nodes():
   assert leftright.left == None
   assert leftright.right == None
   
+def test_swap3nodesrightright():
+  tree = BinTree(value=1,right=BinTree(value=2,right=BinTree(value=3)))
+  tree.swap(tree.right)
+  tree = tree.root
+  tree.right.swap(tree.right.right)
+  assert tree.right.value == 3
+  assert tree.right.parent.value == 2
+  assert tree.right.right.value == 1
+  assert tree.right.right.parent.value == 3
+  assert tree.left is None
+  
+def test_swap3nodesleaves():
+  tree = BinTree(value=2,left=BinTree(value=1),right=BinTree(value=3))
+  tree.left.swap(tree.right)
+  assert tree.right.value == 1
+  assert tree.left.value == 3
+  assert tree.right.parent.value == 2
+  assert tree.left.parent.value == 2
+  
+def test_swap3nodesrootandright():
+  tree = BinTree(value=2,left=BinTree(value=1),right=BinTree(value=3))
+  tree.swap(tree.right)
+  tree = tree.root
+  assert tree.right.value == 2
+  assert tree.left.value == 1
+  assert tree.right.parent.value == 3
+  assert tree.left.parent.value == 3
+  
+def test_swap3nodesrootandleft():
+  tree = BinTree(value=2,left=BinTree(value=1),right=BinTree(value=3))
+  tree.swap(tree.left)
+  tree = tree.root
+  assert tree.right.value == 3
+  assert tree.left.value == 2
+  assert tree.right.parent.value == 1
+  assert tree.left.parent.value == 1
+  
+def test_swap11nodes():
+  tree = BinTree(value=6,
+    left=BinTree(value=3,
+      left=BinTree(value=7, left=BinTree(value=1)),
+      right=BinTree(value=4, right=BinTree(value=5))
+    ),
+    right=BinTree(value=9,
+      left=BinTree(value=2, right=BinTree(value=8)),
+      right=BinTree(value=11, left=BinTree(value=10))
+    )
+  )
+  
+  tree.left.left.swap(tree.right.left)
+  i=1
+  for n in tree.ltor():
+    assert n.value == i
+    assert n.root == tree
+    i += 1
+    
+  tree.right.left.swap(tree.left.left)
+  tree.right.right.swap(tree.left.left)
+  tree.right.right.swap(tree.right.left)
+  tree.right.right.swap(tree.left.left)
+  i=1
+  for n in tree.ltor():
+    assert n.value == i
+    assert n.root == tree
+    i += 1
+    
+  tree.right.left.swap(tree.left.left)
+  tree.left.right.right.swap(tree.left.left)
+  tree.left.right.right.swap(tree.right.left)
+  tree.left.right.right.swap(tree.left.left)
+  i=1
+  for n in tree.ltor():
+    assert n.value == i
+    assert n.root == tree
+    i += 1
+    
+  tree.right.left.swap(tree.left.left)
+  tree.right.right.left.swap(tree.left.left)
+  tree.right.right.left.swap(tree.right.left)
+  tree.right.right.left.swap(tree.left.left)
+  i=1
+  for n in tree.ltor():
+    assert n.value == i
+    assert n.root == tree
+    i += 1
+    
+  tree.right.left.swap(tree.left.left)
+  tree.right.left.right.swap(tree.left.left)
+  tree.right.left.right.swap(tree.right.left)
+  tree.right.left.right.swap(tree.left.left)
+  i=1
+  for n in tree.ltor():
+    assert n.value == i
+    assert n.root == tree
+    i += 1

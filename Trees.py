@@ -54,6 +54,78 @@ class BinTree:
     if self.right is not None:
       self.right.parent = self
   
+  # node is BinTree, prop is "left" or "right"
+  def _swap_prop(self, node, prop):
+    if getattr(self, prop) == node:
+      setattr(self, prop, getattr(node, prop))
+      setattr(node, prop, self)
+    elif getattr(node, prop) == self:
+      setattr(node, prop, getattr(self, prop))
+      setattr(self, prop, node)
+    else:
+      np = getattr(node, prop)
+      setattr(node, prop, getattr(self, prop))
+      setattr(self, prop, np)
+    if getattr(self,prop) is not None:
+      getattr(self,prop).parent = self
+    if getattr(node,prop) is not None:
+      getattr(node,prop).parent = node
+  
+  def swap(self, node):
+    if node is None:
+      raise ValueError("node to swap with cannot be None")
+    
+    #swap parent pointers
+    np,sp = True,True
+    lf,rt = True,True
+    if self.parent == node:
+      node.parent, self.parent = self, node.parent
+      if node.left == self:
+        node.left, self.left, lf = self.left, node, False
+        if node.left is not None: node.left.parent = self
+      else:
+        node.right, self.right, rt = self.right, node, False
+        if node.right is not None: node.right.parent = self
+      np=False # don't have to set node.parent child pointer
+    elif node.parent == self:
+      self.parent, node.parent = node, self.parent
+      if self.left == node:
+        self.left, node.left, lf = node.left, self, False
+        if self.left is not None: self.left.parent = self
+      else:
+        self.right, node.right, rt = node.right, self, False
+        if self.right is not None: self.right.parent = self
+      sp=False # don't have to set self.parent child pointer
+    elif node.parent == self.parent:
+      if node.parent.left == node:
+        node.parent.left = self
+        node.parent.right = node
+      else:
+        node.parent.left = node
+        node.parent.right = self
+      np,sp=False,False # don't have to set either parent child pointer
+    else:
+      node.parent, self.parent = self.parent, node.parent
+      
+    if sp:
+      if self.parent is not None:
+        if self.parent.left == node:
+          self.parent.left = self
+        else:
+          self.parent.right = self
+    if np:
+      if node.parent is not None:
+        if node.parent.left == self:
+          node.parent.left = node
+        else:
+          node.parent.right = node
+    
+    #swap left & right pointers
+    if lf:
+      self._swap_prop(node, "left")
+    if rt:
+      self._swap_prop(node, "right")
+  
   # right means moving myself to the right of my left child
   def rotate_right(self):
     s = self
@@ -140,6 +212,22 @@ class BinTree:
     if self.left is not None:
       for ch in self.left.rtol():
         yield ch
+        
+  def __str__(self, depth=0):
+    ret = ""
+
+    # Print right branch
+    if self.right != None:
+      ret += self.right.__str__(depth + 1)
+
+    # Print own value
+    ret += "\n" + ("    "*depth) + str(self.value)
+
+    # Print left branch
+    if self.left != None:
+      ret += self.left.__str__(depth + 1)
+
+    return ret
 
 RED = False 
 BLACK = True
@@ -452,12 +540,14 @@ class BaseTree:
       return None
     return node.value[1]
     
-  def delete(self, key):
-    node = self._srch_node(key)
-    
-    if node is None:
-      return
-      
+  def _swap(self, n1, n2):
+    if n1 == self.root:
+      self.root = n2
+    elif n2 == self.root:
+      self.root = n1
+    n1.swap(n2)
+  
+  def _delNode(self, node):
     if (node.left is None) and (node.right is None):
       if self.root == node:
         self.root = None
@@ -466,43 +556,18 @@ class BaseTree:
       else:
         node.parent.right = None
       return
-    
-    if node.left is None:
-      replaceNode = next(node.right.ltor())
-    else:
-      replaceNode = next(node.left.rtol())
-    
-    replNodeCh = replaceNode.left if (replaceNode.right is None) else replaceNode.right
-    if replNodeCh is not None:
-      replNodeCh.parent = replaceNode if (replaceNode.parent == node) else replaceNode.parent
-      if replNodeCh.parent.left == replaceNode:
-        replNodeCh.parent.left = replNodeCh
-      else:
-        replNodeCh.parent.right = replNodeCh
-    else:
-      if replaceNode.parent.left == replaceNode:
-        replaceNode.parent.left = None
-      else:
-        replaceNode.parent.right = None
-    
-    if (node.left is not replaceNode):
-      replaceNode.left = node.left
-      if node.left is not None:
-        node.left.parent = replaceNode
-    if (node.right is not replaceNode):
-      replaceNode.right = node.right
-      if node.right is not None:
-        node.right.parent = replaceNode
       
-    if node is self.root:
-      self.root = replaceNode
-      self.root.parent = None
+    if node.left is None:
+      self._swap(node, next(node.right.ltor()))
     else:
-      if node.parent.left == node:
-        node.parent.left = replaceNode
-      else:
-        node.parent.right = replaceNode
-      replaceNode.parent = node.parent
+      self._swap(node, next(node.left.rtol()))
+    self._delNode(node)
+  
+  def delete(self, key):
+    node = self._srch_node(key)
+    if node is None:
+      return
+    self._delNode(node)
     
 class AVL_Tree:
   def __init__(self):

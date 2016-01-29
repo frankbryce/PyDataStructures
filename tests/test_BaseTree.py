@@ -108,19 +108,19 @@ def test_manyInsertsAndSomeDeletesReturnsRemainingValues():
 
 def test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData():
   tree = BaseTree()
-  for i in range(1, 1001):
+  for i in range(1, 101):
     tree.insert("k"+str(i), i)
     _validate(tree)
     
   # delete every other
-  for i in range(1, 1001)[::2]:
+  for i in range(1, 101)[::2]:
     tree.delete("k"+str(i))
     _validate(tree)
     
   # make sure deletions are gone
-  for i in range(1, 1001)[::2]:
+  for i in range(1, 101)[::2]:
     assert tree.search("k"+str(i)) == None
     
   # make sure the rest are still there
-  for i in range(1, 1001)[1::2]:
+  for i in range(1, 101)[1::2]:
     assert tree.search("k"+str(i)) == i
