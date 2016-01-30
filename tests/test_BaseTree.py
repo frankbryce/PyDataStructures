@@ -4,7 +4,6 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 import pytest
 from Trees import BaseTree
-from Trees import validate_RB_BTree as validate
 
 def test_insertThenSearchReturnsValue():
   tree = BaseTree()
@@ -124,3 +123,34 @@ def test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData():
   # make sure the rest are still there
   for i in range(1, 101)[1::2]:
     assert tree.search("k"+str(i)) == i
+
+def degenerateCase_insertAscendingOrder(n):
+  tree = BaseTree()
+  for i in range(0,n):
+    tree.insert(i,i)
+
+def degenerateCase_insertDescendingOrder(n):
+  tree = BaseTree()
+  for i in range(0,n):
+    tree.insert(n-i,n-i)
+
+def degenerateCase_insertOutInOrder(n):
+  tree = BaseTree()
+  for i in range(0,n):
+    idx = (i%2)*n + (1-2*(i%2))*i
+    tree.insert(idx,idx)
+
+def degenerateCase_insertAscendingOrder(n):
+  tree = BaseTree()
+  for i in range(0,n):
+    tree.insert(i,i)
+    
+def test_degenerateCaseAscOrder(benchmark):
+  benchmark(degenerateCase_insertAscendingOrder, n=1000)
+  
+def test_degenerateCaseDescOrder(benchmark):
+  benchmark(degenerateCase_insertDescendingOrder, n=1000)
+  
+def test_degenerateCaseOutInOrder(benchmark):
+  benchmark(degenerateCase_insertDescendingOrder, n=1000)
+  

@@ -389,12 +389,29 @@ class BaseTree:
     else:
       node.parent.right = None
     
-class AVL_Tree:
+class AvlTree:
   def __init__(self):
     root = None
     
   def insert(self, key, value):
-    pass
+    if self.root is None:
+      self.root = BinTree(value=_val(key,value))
+      return
+      
+    node = self.root
+    while True:
+      if key > node.value.key:
+        if node.right is None:
+          node.add_right(BinTree(value=_val(key,value)))
+          return
+        node = node.right
+      elif key < node.value.key:
+        if node.left is None:
+          node.add_left(BinTree(value=_val(key,value)))
+          return
+        node = node.left
+      else:
+        raise ValueError("Same key inserted twice: " + str(key))
     
   def search(self, key):
     pass
