@@ -50,7 +50,7 @@ def _validate(tree):
       rht = node.right.height
     else:
       rht = 0
-    assert lht-rht<=1 or rht-lht<=1
+    assert lht-rht==node.balance
     
     # assert parents make sense
     if node != tree.root:
