@@ -365,42 +365,80 @@ class AvlTree:
       return 0
     return len(self.root)
   
-  # adj is the change in height that node noticed in
-  # its (prior to this call's) alterations
-  def _rebal(self, node, adj):
-    myAdj = adj
+  # adj is the change in height node's subtree with the changes
+  # that the node tree undergoes in this method
+  def _rebal(self, node):
+    adj=0
     if node.balance < -1 or node.balance > 1:
-      # if balance is -2
       if node.balance == -2:
-        # if node.right balance is 1
         if node.right.balance==1:
+          if node.right.left.balance==-1:
+            node.right.rotate_right()
+            node.right.right.balance=0
+            node.right.balance=-2
+          elif node.right.left.balance==0:
+            node.right.rotate_right()
+            node.right.right.balance=0
+            node.right.balance=-1
+          else: #node.right.left.balance==1
+            node.right.rotate_right()
+            node.right.right.balance=-1
+            node.right.balance=-1
+          if node.right.balance==-1:
+            node.balance=0
+          else: #node.right.balance==-2
+            node.balance=1
           node.right.balance=0
-          node.right.rotate_right()
-        # (node.right balance is -1)
-        # .. but it will be 0 after the next rotation
-        node.right.balance=0
-        node.rotate_left()
-      # else (if balance is 2)
-      else:
-        # if node.left balance is -1
+          adj=-1
+          node.rotate_left()
+        elif node.right.balance==0:
+          node.balance=-1
+          node.right.balance=1
+          adj=0
+          node.rotate_left()
+        else: # node.right.balance==-1
+          node.balance=0
+          node.right.balance=0
+          adj=-1
+          node.rotate_left()
+      else: # node.balance==2
         if node.left.balance==-1:
+          if node.left.right.balance==1:
+            node.left.rotate_left()
+            node.left.left.balance=0
+            node.left.balance=2
+          elif node.left.right.balance==0:
+            node.left.rotate_left()
+            node.left.left.balance=0
+            node.left.balance=1
+          else: #node.left.right.balance==1
+            node.left.rotate_left()
+            node.left.left.balance=1
+            node.left.balance=1
+          if node.left.balance==1:
+            node.balance=0
+          else: #node.left.balance==2
+            node.balance=-1
           node.left.balance=0
-          node.left.rotate_right()
-        # (node.left balance is 1)
-        # .. but it will be 0 after the next rotation
-        node.left.balance=0
-        node.rotate_right()
+          adj=-1
+          node.rotate_right()
+        elif node.left.balance==0:
+          node.balance=1
+          node.left.balance=-1
+          adj=0
+          node.rotate_right()
+        else: # node.left.balance==1
+          node.balance=0
+          node.left.balance=0
+          adj=-1
+          node.rotate_right()
         
-      # node adjusted to same height as it was before
-      myAdj = 0
-      # after all of that, the balance is again 0
-      node.balance=0
       # set root if it was affected
       if self.root == node:
         self.root = node.parent
       # node.parent is now where node used to be
       node = node.parent
-    return node, myAdj
+    return node, adj
   
   # adj is the change in height that node noticed in
   # its (prior to this call's) alterations
@@ -413,16 +451,26 @@ class AvlTree:
       return
     
     if parent.left == node:
+      bal = parent.balance
       parent.balance += adj
+      if (adj==1) and (bal==-1):
+        adj=0
+      elif (adj==-1) and (bal!=1):
+        adj=0
     else:
+      bal = parent.balance
       parent.balance -= adj
+      if (adj==1) and (bal==1):
+        adj=0
+      elif (adj==-1) and (bal!=-1):
+        adj=0
     
-    # default adjustment for our height is what our child's was,
-    # until we adjust ourselves (if necessary)
-    parent, myAdj = self._rebal(parent, adj)
+    # after adjusting from child's adjustment,
+    # fix our balance if something changed
+    parent, adj2 = self._rebal(parent)
     
     # call self._rebal(parent, adjustment in parent's height)
-    self._rebal_recurse(parent, myAdj)
+    self._rebal_recurse(parent, adj+adj2)
   
   def insert(self, key, value):
     if self.root is None:
@@ -489,12 +537,19 @@ class AvlTree:
     elif node.parent.left == node:
       node.parent.left = None
       node.parent.balance -= 1
+      if node.parent.is_leaf():
+        adj=-1
+      else:
+        adj=0
     else:
       node.parent.right = None
       node.parent.balance += 1
-    is_leaf = node.parent.is_leaf()
-    nodeparent, adj = self._rebal(node.parent, -1 if is_leaf else 0)
-    self._rebal_recurse(nodeparent, adj)
+      if node.parent.is_leaf():
+        adj=-1
+      else:
+        adj=0
+    nodeparent, adj2 = self._rebal(node.parent)
+    self._rebal_recurse(nodeparent, adj+adj2)
 
 RED = False 
 BLACK = True

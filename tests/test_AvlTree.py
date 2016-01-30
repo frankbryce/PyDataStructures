@@ -68,7 +68,7 @@ def inOrderTest(n):
     assert len(tree) == n-(i+1)
   for i in range(0,n):
     assert tree.search("k"+str(i)) == None
-  
+
 def test_insert3TimesThenDelete3TimesInOrderThenSearchReturnsNone():
   inOrderTest(3)
 
