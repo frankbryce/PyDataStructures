@@ -290,39 +290,6 @@ class RevBTree(BinTree):
   def Tree(self):
     return self._tree
 
-class _val:
-  def __init__(self, key, value):
-    self.key = key
-    self.value = value
-  
-  def __lt__(self, val):
-    if not isinstance(val, _val):
-      return NotImplemented
-    return self.key < val.key
-  def __le__(self, val):
-    if not isinstance(val, _val):
-      return NotImplemented
-    return self.key <= val.key
-  def __gt__(self, val):
-    if not isinstance(val, _val):
-      return NotImplemented
-    return self.key > val.key
-  def __ge__(self, val):
-    if not isinstance(val, _val):
-      return NotImplemented
-    return self.key >= val.key
-  def __eq__(self, val):
-    if not isinstance(val, _val):
-      return NotImplemented
-    return self.key == val.key
-  def __ne__(self, val):
-    if not isinstance(val, _val):
-      return NotImplemented
-    return self.key != val.key
-  
-  def __str__(self):
-    return "(k: " + str(self.key) + ", v: " + str(self.value) + ")"
-
 class BaseTree:
   def __init__(self):
     self.root = None
@@ -334,19 +301,19 @@ class BaseTree:
     
   def insert(self, key, value):
     if self.root is None:
-      self.root = BinTree(value=_val(key,value))
+      self.root = BinTree(value=(key,value))
       return
       
     node = self.root
     while True:
-      if key > node.value.key:
+      if key > node.value[0]:
         if node.right is None:
-          node.add_right(BinTree(value=_val(key,value)))
+          node.add_right(BinTree(value=(key,value)))
           return
         node = node.right
-      elif key < node.value.key:
+      elif key < node.value[0]:
         if node.left is None:
-          node.add_left(BinTree(value=_val(key,value)))
+          node.add_left(BinTree(value=(key,value)))
           return
         node = node.left
       else:
@@ -356,10 +323,10 @@ class BaseTree:
     if self.root == None:
       return None
     node = self.root
-    while (node is not None) and (node.value.key != key):
-      if key > node.value.key:
+    while (node is not None) and (node.value[0] != key):
+      if key > node.value[0]:
         node = node.right
-      elif key < node.value.key:
+      elif key < node.value[0]:
         node = node.left
     return node
     
@@ -367,7 +334,7 @@ class BaseTree:
     node = self._srch_node(key)
     if (node is None) or (node.value is None):
       return None
-    return node.value.value
+    return node.value[1]
   
   def delete(self, key):
     node = self._srch_node(key)
@@ -391,33 +358,143 @@ class BaseTree:
     
 class AvlTree:
   def __init__(self):
-    root = None
+    self.root = None
     
+  def __len__(self):
+    if self.root is None:
+      return 0
+    return len(self.root)
+  
+  # adj is the change in height that node noticed in
+  # its (prior to this call's) alterations
+  def _rebal(self, node, adj):
+    myAdj = adj
+    if node.balance < -1 or node.balance > 1:
+      # if balance is -2
+      if node.balance == -2:
+        # if node.right balance is 1
+        if node.right.balance==1:
+          node.right.balance=0
+          node.right.rotate_right()
+        # (node.right balance is -1)
+        # .. but it will be 0 after the next rotation
+        node.right.balance=0
+        node.rotate_left()
+      # else (if balance is 2)
+      else:
+        # if node.left balance is -1
+        if node.left.balance==-1:
+          node.left.balance=0
+          node.left.rotate_right()
+        # (node.left balance is 1)
+        # .. but it will be 0 after the next rotation
+        node.left.balance=0
+        node.rotate_right()
+        
+      # node adjusted to same height as it was before
+      myAdj = 0
+      # after all of that, the balance is again 0
+      node.balance=0
+      # set root if it was affected
+      if self.root == node:
+        self.root = node.parent
+      # node.parent is now where node used to be
+      node = node.parent
+    return node, myAdj
+  
+  # adj is the change in height that node noticed in
+  # its (prior to this call's) alterations
+  def _rebal_recurse(self, node, adj):
+    # assume node is already at correct balance... but not parent
+    # and work our way up the tree
+    parent = node.parent
+    # if parent is None then return
+    if parent is None:
+      return
+    
+    if parent.left == node:
+      parent.balance += adj
+    else:
+      parent.balance -= adj
+    
+    # default adjustment for our height is what our child's was,
+    # until we adjust ourselves (if necessary)
+    parent, myAdj = self._rebal(parent, adj)
+    
+    # call self._rebal(parent, adjustment in parent's height)
+    self._rebal_recurse(parent, myAdj)
+  
   def insert(self, key, value):
     if self.root is None:
-      self.root = BinTree(value=_val(key,value))
+      self.root = BinTree(value=(key,value))
+      self.root.balance=0
       return
       
     node = self.root
     while True:
-      if key > node.value.key:
+      if key > node.value[0]:
         if node.right is None:
-          node.add_right(BinTree(value=_val(key,value)))
+          ch = BinTree(value=(key,value))
+          ch.balance=0
+          node.add_right(ch)
+          node.balance -= 1
+          self._rebal_recurse(node, 1 if node.left is None else 0)
           return
         node = node.right
-      elif key < node.value.key:
+      elif key < node.value[0]:
         if node.left is None:
-          node.add_left(BinTree(value=_val(key,value)))
+          ch = BinTree(value=(key,value))
+          ch.balance=0
+          node.add_left(ch)
+          node.balance += 1
+          self._rebal_recurse(node, 1 if node.right is None else 0)
           return
         node = node.left
       else:
         raise ValueError("Same key inserted twice: " + str(key))
+        
+  def _srch_node(self, key):
+    if self.root == None:
+      return None
+    node = self.root
+    while (node is not None) and (node.value[0] != key):
+      if key > node.value[0]:
+        node = node.right
+      elif key < node.value[0]:
+        node = node.left
+    return node
     
   def search(self, key):
-    pass
-    
+    node = self._srch_node(key)
+    if (node is None) or (node.value is None):
+      return None
+    return node.value[1]
+  
   def delete(self, key):
-    pass
+    node = self._srch_node(key)
+    if node is None:
+      return
+      
+    while not node.is_leaf():
+      if node.left is None:
+        nxtNode = next(node.right.ltor())
+      else:
+        nxtNode = next(node.left.rtol())
+      node.swap_val(nxtNode)
+      node = nxtNode
+      
+    if self.root == node:
+      self.root = None
+      return
+    elif node.parent.left == node:
+      node.parent.left = None
+      node.parent.balance -= 1
+    else:
+      node.parent.right = None
+      node.parent.balance += 1
+    is_leaf = node.parent.is_leaf()
+    nodeparent, adj = self._rebal(node.parent, -1 if is_leaf else 0)
+    self._rebal_recurse(nodeparent, adj)
 
 RED = False 
 BLACK = True
@@ -456,15 +533,15 @@ class RB_BTree(BinTree):
     if self.value is None:
       self.value = (key, value)
       self._insert_case1()
-    elif self.value.key == key:
+    elif self.value[0] == key:
       raise ValueError("key \"" + str(key) + "\" has already been inserted")
-    elif key > self.value.key:
+    elif key > self.value[0]:
       if self.right is None:
         self.add_right((key, value))
         self.right._insert_case1()
       else:
         self.right.insert(key,value)
-    elif key < self.value.key:
+    elif key < self.value[0]:
       if self.left is None:
         self.add_left((key, value))
         self.left._insert_case1()
@@ -520,12 +597,12 @@ class RB_BTree(BinTree):
       self.grandparent.rotate_left()
     
   def _srch_node(self, key):
-    if (self.value is None) or (self.value.key == key):
+    if (self.value is None) or (self.value[0] == key):
       return self
-    elif key > self.value.key:
+    elif key > self.value[0]:
       if self.right is not None:
         return self.right._srch_node(key)
-    elif key < self.value.key:
+    elif key < self.value[0]:
       if self.left is not None:
         return self.left._srch_node(key)
     return None
@@ -534,7 +611,7 @@ class RB_BTree(BinTree):
     node = self._srch_node(key)
     if (node is None) or (node.value is None):
       return None
-    return node.value.value
+    return node.value[1]
     
   def delete(self, key):
     node = self._srch_node(key)

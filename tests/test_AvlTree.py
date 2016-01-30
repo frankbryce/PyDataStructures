@@ -3,21 +3,21 @@ import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 import pytest
-from Trees import BaseTree
+from Trees import AvlTree
 
 def test_insertThenSearchReturnsValue():
-  tree = BaseTree()
+  tree = AvlTree()
   tree.insert("k5", 5)
   assert tree.search("k5") == 5
 
 def test_insertThenDeleteThenSearchReturnsNone():
-  tree = BaseTree()
+  tree = AvlTree()
   tree.insert("k5", 5)
   tree.delete("k5")
   assert tree.search("k5") == None
 
 def test_insert3TimesThenDelete3TimesThenSearchReturnsNone():
-  tree = BaseTree()
+  tree = AvlTree()
   tree.insert("k7", 7)
   tree.insert("k6", 6)
   tree.insert("k5", 5)
@@ -40,12 +40,24 @@ def _validate(tree):
       assert last < node.value[0]
       last = node.value[0]
       
+    # assert tree is keeping itself balanced
+    assert node.balance<=1 and node.balance>=-1
+    if node.left is not None:
+      lht = node.left.height
+    else:
+      lht = 0
+    if node.right is not None:
+      rht = node.right.height
+    else:
+      rht = 0
+    assert lht-rht<=1 or rht-lht<=1
+    
     # assert parents make sense
     if node != tree.root:
       assert node==node.parent.left or node==node.parent.right
   
 def inOrderTest(n):
-  tree = BaseTree()
+  tree = AvlTree()
   for i in range(0,n):
     tree.insert("k"+str(i),i)
     _validate(tree)
@@ -73,14 +85,14 @@ def test_insert11TimesThenDelete11TimesInOrderThenSearchReturnsNone():
   inOrderTest(11)
 
 def test_manyInsertsReturnsCorrectValues():
-  tree = BaseTree()
+  tree = AvlTree()
   for i in range(1, 11):
     tree.insert("k"+str(i), i)
   for i in range(1, 11):
     assert tree.search("k"+str(i)) == i
 
 def test_manyInsertsReturnsCorrectValuesOutOfOrder():
-  tree = BaseTree()
+  tree = AvlTree()
   for i in range(1, 11):
     tree.insert("k"+str(i), i)
   
@@ -89,7 +101,7 @@ def test_manyInsertsReturnsCorrectValuesOutOfOrder():
     assert tree.search("k"+str(i)) == i
 
 def test_manyInsertsAndSomeDeletesReturnsRemainingValues():
-  tree = BaseTree()
+  tree = AvlTree()
   for i in range(1, 11):
     tree.insert("k"+str(i), i)
     
@@ -106,7 +118,7 @@ def test_manyInsertsAndSomeDeletesReturnsRemainingValues():
     assert tree.search("k"+str(i)) == i
 
 def test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData():
-  tree = BaseTree()
+  tree = AvlTree()
   for i in range(1, 101):
     tree.insert("k"+str(i), i)
     _validate(tree)
@@ -125,7 +137,7 @@ def test_manyInsertsAndSomeDeletesReturnsRemainingValuesLargeData():
     assert tree.search("k"+str(i)) == i
 
 def degenerateCase_insertAscendingOrder(n):
-  tree = BaseTree()
+  tree = AvlTree()
   for i in range(0,n):
     tree.insert(i,i)
   
