@@ -3,8 +3,8 @@ import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 import pytest
-from Trees import AvlTree
-from Trees import BaseTree
+from SearchTrees import AvlTree
+from SearchTrees import BaseTree
 
 import random
 
@@ -17,16 +17,16 @@ def insertDeleteRandomOrder(t, n):
   for i in range(0,n):
     vals.append(random.randint(0,0x7FFFFFFF))
   for i in range(0,n):
-    tree.insert(vals[i],i)
+    tree[vals[i]] = i
   for i in range(0,n):
-    tree.delete(vals[i])
+    del tree[vals[i]]
 
 def insertDeleteDescendingOrder(t, n):
   tree = t()
   for i in range(0,n):
-    tree.insert(n-i,i)
+    tree[n-i] = i
   for i in range(0,n):
-    tree.delete(n-i)
+    del tree[n-i]
 
 def insertDeleteOutInOrder(t, n):
   tree = t()
@@ -34,16 +34,16 @@ def insertDeleteOutInOrder(t, n):
   for i in range(0,n):
     vals.append((i%2)*n + (1-2*(i%2))*i)
   for i in range(0,n):
-    tree.insert(vals[i],i)
+    tree[vals[i]] = i
   for i in range(0,n):
-    tree.delete(vals[i])
+    del tree[vals[i]]
 
 def insertDeleteAscendingOrder(t, n):
   tree = t()
   for i in range(0,n):
-    tree.insert(i,i)
+    tree[i] = i
   for i in range(0,n):
-    tree.delete(i)
+    del tree[i]
 
 types = [BaseTree, AvlTree]
 sizes = [100,300,1000]

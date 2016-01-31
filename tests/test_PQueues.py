@@ -7,6 +7,8 @@ from PQueues import Heap
 
 from random import shuffle
 
+sizes = [1,3,10,30,100]
+
 def test_enqueueDequeue():
   heap = Heap()
   heap.enqueue(1)
@@ -33,7 +35,7 @@ def _validate(pq):
     if pq.ridx(i)<len(pq.items):
       assert pq.items[pq.ridx(i)][1] <= pq.items[i][1]
  
-@pytest.mark.parametrize('n', [5,10,25,50])
+@pytest.mark.parametrize('n', sizes)
 def test_enqueueDequeuePriority(n):
   heap = Heap()
   expectedOrder = list(range(n))
@@ -46,7 +48,7 @@ def test_enqueueDequeuePriority(n):
     assert heap.dequeue()==i
     _validate(heap)
 
-@pytest.mark.parametrize('n', [5,10,25,50])
+@pytest.mark.parametrize('n', sizes)
 def test_enqueuePriority(n):
   heap = Heap()
   idxs = list(range(n))

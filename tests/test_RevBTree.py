@@ -3,15 +3,15 @@ import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 import pytest
-from Trees import BinTree
+from Trees import BinaryTree
 from Trees import RevBTree
 
 def test_RevBTree_len():
-  rTree = RevBTree(BinTree())
+  rTree = RevBTree(BinaryTree())
   assert len(rTree.Tree)==1
   
 def test_iterInReverse():
-  tree = BinTree(1,left=BinTree(2,left=BinTree(3),right=BinTree(4)),right=BinTree(5,left=BinTree(6),right=BinTree(7)))
+  tree = BinaryTree(1,left=BinaryTree(2,left=BinaryTree(3),right=BinaryTree(4)),right=BinaryTree(5,left=BinaryTree(6),right=BinaryTree(7)))
   rtree = RevBTree(tree)
   
   list1 = list(tree.ltor())

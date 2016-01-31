@@ -3,8 +3,8 @@ import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 import pytest
-from Trees import AvlTree
-from Trees import BaseTree
+from SearchTrees import AvlTree
+from SearchTrees import BaseTree
 
 import random
 
@@ -14,23 +14,23 @@ random.seed(0x1C2C6D66)
 def insertRandomOrder(t, n):
   tree = t()
   for i in range(0,n):
-    tree.insert(random.randint(0,0x7FFFFFFF),i)
+    tree[random.randint(0, 0x7FFFFFFF)] = i
 
 def insertDescendingOrder(t, n):
   tree = t()
   for i in range(0,n):
-    tree.insert(n-i,i)
+    tree[n-i] = i
 
 def insertOutInOrder(t, n):
   tree = t()
   for i in range(0,n):
     idx = (i%2)*n + (1-2*(i%2))*i
-    tree.insert(idx,i)
+    tree[idx] = i
 
 def insertAscendingOrder(t, n):
   tree = t()
   for i in range(0,n):
-    tree.insert(i,i)
+    tree[i] = i
 
 types = [BaseTree, AvlTree]
 sizes = [100,300,1000]
