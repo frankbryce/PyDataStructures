@@ -34,10 +34,11 @@ class Heap:
       
     self.items.append((item, priority))
     idx = len(self.items)-1
-    while idx!=0 and self.items[self.pidx(idx)][1]<self.items[idx][1]:
+    while idx>0 and self.items[self.pidx(idx)][1]<self.items[idx][1]:
       t = self.items[self.pidx(idx)]
       self.items[self.pidx(idx)] = self.items[idx]
       self.items[idx] = t
+      idx = self.pidx(idx)
   
   def peek(self):
     return self.items[0][0]
@@ -58,5 +59,6 @@ class Heap:
         self.items[nIdx] = t
       else:
         break
+      idx = nIdx
     return item
     

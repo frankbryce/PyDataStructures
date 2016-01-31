@@ -45,7 +45,7 @@ def test_enqueueDequeuePriority(n):
     assert heap.peek()==i
     assert heap.dequeue()==i
     _validate(heap)
- 
+
 @pytest.mark.parametrize('n', [5,10,25,50])
 def test_enqueuePriority(n):
   heap = Heap()

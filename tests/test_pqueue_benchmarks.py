@@ -7,20 +7,26 @@ from PQueues import Heap
 
 from random import shuffle
 
-@pytest.mark.parametrize('n', [5,10,25,50])
-def test_enqueueDequeuePriority(n):
+def enqueueDequeuePriority(n):
   heap = Heap()
-  expectedOrder = list(range(n))
-  shuffle(expectedOrder)
+  idxs = list(range(n))
+  shuffle(idxs)
   for i in range(n):
-    heap.enqueue(i, n-expectedOrder.index(i))
-  for i in expectedOrder:
-    heap.dequeue()==i
+    heap.enqueue(i, idxs[1])
+  for i in range(n):
+    heap.dequeue()
  
-@pytest.mark.parametrize('n', [5,10,25,50])
-def test_enqueuePriority(n):
+def enqueuePriority(n):
   heap = Heap()
   idxs = list(range(n))
   shuffle(idxs)
   for i in range(n):
     heap.enqueue(i, idxs[i])
+    
+@pytest.mark.parametrize('n', [5,10,25,50])
+def test_enqueueDequeuePriority(benchmark, n):
+  benchmark(enqueueDequeuePriority,n)
+ 
+@pytest.mark.parametrize('n', [5,10,25,50])
+def test_enqueuePriority(benchmark, n):
+  benchmark(enqueuePriority,n)
