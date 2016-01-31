@@ -174,4 +174,22 @@ def test_InsertsAndSomeDeletesRandomOrderReturnsRemainingValues(t, n):
   for i in range(n)[1::2]:
     assert d["k"+str(vals[i])] == i
 
+@pytest.mark.parametrize("t", types, ids=list(map(lambda t: t["ctor"], types)))
+@pytest.mark.parametrize("n", sizes)
+def test_duplicateKeyInsertion(t, n):
+  d = t["ctor"]()
+  vals = list(range(n))
+  shuffle(vals)
+  for i in range(n):
+    d["k"+str(vals[i])] = i
+  # delete every other
+  for i in range(n)[::2]:
+    del d["k"+str(vals[i])]
+  # make sure deletions are gone
+  for i in range(n)[::2]:
+    with pytest.raises(KeyError):
+      d["k"+str(vals[i])]
+  # make sure the rest are still there
+  for i in range(n)[1::2]:
+    assert d["k"+str(vals[i])] == i
   

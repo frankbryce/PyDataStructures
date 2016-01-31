@@ -5,9 +5,11 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 import pytest
 from PQueues import Heap
 
+import random
 from random import shuffle
 
 def enqueueDequeuePriority(n):
+  random.seed(0x1C2C6D66)
   heap = Heap()
   idxs = list(range(n))
   shuffle(idxs)
@@ -17,6 +19,7 @@ def enqueueDequeuePriority(n):
     heap.dequeue()
  
 def enqueuePriority(n):
+  random.seed(0x1C2C6D66)
   heap = Heap()
   idxs = list(range(n))
   shuffle(idxs)
