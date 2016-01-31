@@ -1,17 +1,51 @@
+class ListPQueue:
+  class Node:
+    def __init__(self, value, priority):
+      self.item = {"value": value, "priority": priority}
+      next = None
+    @property
+    def priority(self):
+      return self.item["priority"]
+    @property
+    def value(self):
+      return self.item["value"]
 
-
-class LList:
   def __init__(self):
-    self.items = []
+    self.head = None
   
-  def enqueue(self, item, priority=0):
-    pass
+  def enqueue(self, value, priority=0):
+    node = self.Node(value, priority)
+    node.next = self.head
+    self.head = node
+    last = None
+    while node.next is not None and \
+          node.next.priority >= node.priority:
+      nxt = node.next
+      node.next = nxt.next
+      nxt.next = node
+      if last is not None:
+        last.next = nxt
+      if node==self.head:
+        self.head = nxt
+      last = nxt
   
   def peek(self):
-    pass
+    return self.head.value
   
   def dequeue(self):
-    pass
+    if self.head is None:
+      return None
+    val = self.head.value
+    self.head = self.head.next
+    return val
+    
+  def __str__(self):
+    node = self.head
+    s = ""
+    while node is not None:
+      s += "("+str(node.value)+","+str(node.priority)+")"
+      node = node.next
+    return s
     
 class Heap:
   def __init__(self):

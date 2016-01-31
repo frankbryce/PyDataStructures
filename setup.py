@@ -9,7 +9,7 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
-
+    
 setup(
     name='DataStructures',
 
@@ -110,4 +110,6 @@ setup(
         # 'sample=sample:main',
       ],
     },
+    
+    tests_require=['pytest'],
 )
