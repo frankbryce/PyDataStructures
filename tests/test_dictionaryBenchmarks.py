@@ -8,83 +8,93 @@ from SearchTrees import BaseTree
 
 import random
 
-class TestBenchInsert:
-  def insertRandomOrder(t, n):
-    random.seed(0x1C2C6D66)
-    d = t()
-    for i in range(0,n):
-      d[random.randint(0, 0x7FFFFFFF)] = i
+from pdb import set_trace
 
-  def insertDescendingOrder(t, n):
-    d = t()
-    for i in range(0,n):
-      d[n-i] = i
+def benchmark_this(test):
+  def wrapper(benchmark, t, n):
+    benchmark(test, None, t, n)
+  return wrapper
 
-  def insertOutInOrder(t, n):
-    d = t()
-    for i in range(0,n):
-      idx = (i%2)*n + (1-2*(i%2))*i
-      d[idx] = i
+types = [BaseTree, AvlTree, dict]
+sizes = [100,300,1000]
 
-  def insertAscendingOrder(t, n):
-    d = t()
-    for i in range(0,n):
-      d[i] = i
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertRandomOrder(benchmark, t, n):
+  random.seed(0x1C2C6D66)
+  d = t()
+  for i in range(n):
+    d[random.randint(0, 0x7FFFFFFF)] = i
 
-  types = [BaseTree, AvlTree, dict]
-  sizes = [100,300,1000]
-  cases = [insertAscendingOrder, insertDescendingOrder, insertOutInOrder, insertRandomOrder]
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertDescendingOrder(benchmark, t, n):
+  d = t()
+  for i in range(n):
+    d[n-i] = i
 
-  @pytest.mark.parametrize('t', types)
-  @pytest.mark.parametrize('n', sizes)
-  @pytest.mark.parametrize('case', cases, ids=list(map(lambda f: f.__name__, cases)))
-  @pytest.mark.benchmark(group="insert-cases")
-  def test_benchmark(self, benchmark, case, t, n):
-    benchmark(case, t, n)
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertOutInOrder(benchmark, t, n):
+  d = t()
+  for i in range(n):
+    idx = (i%2)*n + (1-2*(i%2))*i
+    d[idx] = i
 
-class TestBenchInsertDelete:
-  def insertDeleteRandomOrder(t, n):
-    random.seed(0x1C2C6D66)
-    d = t()
-    vals=[]
-    for i in range(0,n):
-      vals.append(random.randint(0,0x7FFFFFFF))
-    for i in range(0,n):
-      d[vals[i]] = i
-    for i in range(0,n):
-      del d[vals[i]]
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertAscendingOrder(benchmark, t, n):
+  d = t()
+  for i in range(n):
+    d[i] = i
 
-  def insertDeleteDescendingOrder(t, n):
-    d = t()
-    for i in range(0,n):
-      d[n-i] = i
-    for i in range(0,n):
-      del d[n-i]
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertDeleteRandomOrder(benchmark, t, n):
+  random.seed(0x1C2C6D66)
+  d = t()
+  vals=[]
+  for i in range(n):
+    vals.append(random.randint(0,0x7FFFFFFF))
+  for i in range(n):
+    d[vals[i]] = i
+  for i in range(n):
+    del d[vals[i]]
 
-  def insertDeleteOutInOrder(t, n):
-    d = t()
-    vals = []
-    for i in range(0,n):
-      vals.append((i%2)*n + (1-2*(i%2))*i)
-    for i in range(0,n):
-      d[vals[i]] = i
-    for i in range(0,n):
-      del d[vals[i]]
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertDeleteDescendingOrder(benchmark, t, n):
+  d = t()
+  for i in range(n):
+    d[n-i] = i
+  for i in range(n):
+    del d[n-i]
 
-  def insertDeleteAscendingOrder(t, n):
-    d = t()
-    for i in range(0,n):
-      d[i] = i
-    for i in range(0,n):
-      del d[i]
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertDeleteOutInOrder(benchmark, t, n):
+  d = t()
+  vals = []
+  for i in range(n):
+    vals.append((i%2)*n + (1-2*(i%2))*i)
+  for i in range(n):
+    d[vals[i]] = i
+  for i in range(n):
+    del d[vals[i]]
 
-  types = [BaseTree, AvlTree, dict]
-  sizes = [100,300,1000]
-  cases = [insertDeleteAscendingOrder, insertDeleteDescendingOrder, insertDeleteOutInOrder, insertDeleteRandomOrder]
-
-  @pytest.mark.parametrize('t', types)
-  @pytest.mark.parametrize('n', sizes)
-  @pytest.mark.parametrize('case', cases, ids=list(map(lambda f: f.__name__, cases)))
-  @pytest.mark.benchmark(group="insertDelete-cases")
-  def test_benchmark(self, benchmark, case, t, n):
-    benchmark(case, t, n)
+@pytest.mark.parametrize('t', types)
+@pytest.mark.parametrize('n', sizes)
+@benchmark_this
+def test_insertDeleteAscendingOrder(benchmark, t, n):
+  d = t()
+  for i in range(n):
+    d[i] = i
+  for i in range(n):
+    del d[i]
